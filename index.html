@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blood on the Clocktower — Trouble Brewing Storyteller</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container" role="main">
+    <header class="header">
+      <h1>Trouble Brewing — Storyteller Tool</h1>
+      <p class="sub">
+        Tick roles in play, set any Reveal presets (e.g., Washerwoman’s Townsfolk), then generate the night script.
+        Shortcuts: <kbd>F</kbd> fullscreen, <kbd>S</kbd> step mode, <kbd>P</kbd> poison toggle, <kbd>R</kbd> re-roll.
+      </p>
+    </header>
+
+    <section class="card" aria-labelledby="rolesHeading">
+      <h2 id="rolesHeading">Roles in play</h2>
+      <form id="roleForm" class="roles" aria-live="polite"></form>
+      <div class="actions">
+        <button id="generateBtn" type="button" aria-controls="scriptSection">Generate</button>
+        <button id="toggleMetaBtn" type="button" class="ghost" aria-pressed="true">Hide Ask/Reveal</button>
+        <button id="resetBtn" type="button" class="ghost">Reset</button>
+      </div>
+    </section>
+
+    <section id="scriptSection" class="card" aria-labelledby="scriptHeading">
+      <h2 id="scriptHeading">Night Script</h2>
+      <details class="night-block" open>
+        <summary>
+          <h3>First Night</h3>
+        </summary>
+        <ol id="firstNightList" aria-live="polite" aria-atomic="false"></ol>
+      </details>
+      <details class="night-block" open>
+        <summary>
+          <h3>Each Night</h3>
+        </summary>
+        <ol id="eachNightList" aria-live="polite" aria-atomic="false"></ol>
+      </details>
+    </section>
+
+    <footer class="footer">
+      <p>Fan-made utility for live storytelling. Use with official materials.</p>
+      <noscript>This tool needs JavaScript enabled.</noscript>
+    </footer>
+  </main>
+
+  <div id="textCard" aria-hidden="true">
+    <div class="inner">
+      <div class="badge" id="textCardBadge">ASK</div>
+      <div class="bigtext" id="textCardText"></div>
+
+      <div id="controlRow" class="controls" aria-hidden="true">
+        <label class="switch">
+          <input type="checkbox" id="poisonToggle" />
+          <span>Poisoned</span>
+        </label>
+      </div>
+
+      <figure id="textCardFigure" hidden>
+        <img id="textCardTokenImg" alt="" />
+        <figcaption id="textCardTokenCaption"></figcaption>
+      </figure>
+
+      <div class="toolbar">
+        <button id="pickBtn" type="button" class="ghost">Pick…</button>
+        <button id="textCardCloseBtn" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="picker" class="picker" aria-hidden="true">
+    <div class="picker-panel" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+      <div class="picker-head">
+        <h3 id="pickerTitle">Pick a role</h3>
+        <input id="pickerSearch" type="text" placeholder="Search roles…" autocomplete="off" />
+      </div>
+      <div id="pickerList" class="picker-list" role="listbox"></div>
+      <div class="picker-actions">
+        <button id="pickerCancel" type="button" class="ghost">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lightbox" aria-hidden="true">
+    <button id="lightboxClose" aria-label="Close">×</button>
+    <figure>
+      <img id="lightboxImg" alt="" />
+      <figcaption id="lightboxCaption"></figcaption>
+    </figure>
+  </div>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
