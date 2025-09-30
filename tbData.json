@@ -45,7 +45,7 @@
     { "role": "Spy",           "ask": "Look at the Grimoire" },
     { "role": "Scarlet Woman", "ask": "You are now the Imp" },
     { "role": "Imp",           "ask": "Who do you want to kill? (self-kill passes Imp to a Minion)" },
-    { "role": "Ravenkeeper",   "ask": "You died tonight. Point at a player to know their role.", "revealType": "token", "randomPolicy": { "pool": "Any" } },
+    { "role": "Ravenkeeper",   "ask": "The Demon has killed you. Point at a player to know their role", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Undertaker",    "ask": "This dead player’s role is…", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Empath",        "ask": "Your number of evil neighbours", "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
     { "role": "Fortune Teller","ask": "Point at 2 players. I’ll confirm Demon or not (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
