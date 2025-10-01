@@ -16,6 +16,7 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, Cantarell, "Noto Sans", Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
+  line-height: 1.6; /* Improved default line height for readability */
 }
 
 .container { max-width: 980px; margin: 32px auto; padding: 0 16px; }
@@ -36,13 +37,18 @@ body {
 
 .roles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  /* Reduced minmax for better fit on tablets before switching to single column */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 12px;
 }
 fieldset { border: 1px dashed var(--border); border-radius: 10px; padding: 10px 14px; }
 legend { color: var(--muted); padding: 0 6px; }
-label { cursor: pointer; }
-input[type="checkbox"] { margin-right: 6px; }
+label { cursor: pointer; display: inline-flex; align-items: center; } /* Make label a flex container */
+input[type="checkbox"] { 
+    margin-right: 10px; 
+    transform: scale(1.2); /* Make checkboxes slightly bigger */
+}
+
 
 /* New styles for integrated presets */
 .role-item {
@@ -85,10 +91,14 @@ button {
   background: var(--accent);
   border: none;
   color: #08101f;
-  padding: 8px 14px;
+  padding: 10px 16px; /* Increased padding for better touch area */
   font-weight: 700;
   border-radius: 10px;
   cursor: pointer;
+  min-height: 44px; /* Minimum touch target size for accessibility */
+  display: inline-flex; /* Helps with vertical centering */
+  align-items: center;
+  justify-content: center;
 }
 button.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
 button:active { transform: translateY(1px); }
@@ -217,7 +227,7 @@ li.active { outline: 3px solid var(--accent); border-radius: 8px; padding: 4px 6
   background: var(--bg);
   z-index: 10040;
   display: none;
-  padding: 40px 28px;
+  padding: 20px 14px; /* Reduced padding for mobile */
 }
 
 #textCard.show { display: grid; }
@@ -361,3 +371,40 @@ li.active { outline: 3px solid var(--accent); border-radius: 8px; padding: 4px 6
 .picker-item small{ color:var(--muted); }
 .picker-item:hover{ outline:2px solid var(--accent); }
 .picker-actions{ display:flex; justify-content:flex-end; gap:10px; padding:10px 12px; border-top:1px solid var(--border); }
+
+
+/* =================================================================== */
+/* ===== MOBILE RESPONSIVE STYLES (New Section) ===== */
+/* =================================================================== */
+@media (max-width: 768px) {
+  .container {
+    /* Reduce side padding on mobile to maximize space */
+    padding: 0 12px;
+    margin: 16px auto;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .roles {
+    /* Switch to a single-column layout for role selection on small screens */
+    grid-template-columns: 1fr;
+  }
+
+  .role-item {
+    /* Allow player name and preset inputs to wrap to the next line if needed */
+    flex-wrap: wrap;
+  }
+
+  .actions {
+    /* Stack the main action buttons vertically */
+    flex-direction: column;
+    align-items: stretch; /* Make buttons full-width */
+  }
+
+  #scriptSection.fullscreen ol {
+    /* Reduce padding on the left for the script list to give more room for text */
+    padding-left: 20px;
+  }
+}

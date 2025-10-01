@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Blood on the Clocktower — Trouble Brewing Storyteller</title>
   <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="character-counts.css" />
+
+  
 </head>
 <body>
   <main class="container" role="main">
@@ -15,6 +18,22 @@
         Shortcuts: <kbd>F</kbd> fullscreen, <kbd>S</kbd> step mode, <kbd>P</kbd> poison toggle, <kbd>R</kbd> re-roll.
       </p>
     </header>
+
+    <section class="card" id="character-counts-card">
+      <div id="player-count-input-container">
+        <label for="player-count-input">Enter Number of Players:</label>
+        <input type="number" id="player-count-input" min="5" max="20" placeholder="e.g., 7" />
+      </div>
+      <div id="character-counts-display">
+        </div>
+    </section>
+
+
+    <section class="card" aria-labelledby="rolesHeading">
+    </main>
+  
+  <script src="app.js" type="module"></script>
+  <script src="character-counts.js" type="module"></script>
 
     <section class="card" aria-labelledby="rolesHeading">
       <h2 id="rolesHeading">Roles in play</h2>
@@ -94,5 +113,7 @@
   </div>
 
   <script src="app.js" type="module"></script>
+    <script src="character-counts.js" type="module"></script>
+
 </body>
 </html>
