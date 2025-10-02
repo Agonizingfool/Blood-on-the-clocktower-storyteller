@@ -17,7 +17,7 @@ const DOMElements = {
     roleForm: utils.qs("#roleForm"),
     generateBtn: utils.qs("#generateBtn"),
     resetBtn: utils.qs("#resetBtn"),
-    toggleMetaBtn: utils.qs("#toggleMetaBtn"),
+    // REMOVED: toggleMetaBtn: utils.qs("#toggleMetaBtn"),
     firstNightList: utils.qs("#firstNightList"),
     eachNightList: utils.qs("#eachNightList"),
     textCard: utils.qs("#textCard"),
@@ -49,7 +49,7 @@ async function initialize() {
 function attachEventListeners() {
     DOMElements.generateBtn.addEventListener("click", onGenerate);
     DOMElements.resetBtn.addEventListener("click", resetAll);
-    DOMElements.toggleMetaBtn.addEventListener("click", toggleMeta);
+    // REMOVED: DOMElements.toggleMetaBtn.addEventListener("click", toggleMeta);
     DOMElements.textCardCloseBtn.addEventListener("click", () => ui.openTextCard(false));
     DOMElements.poisonToggle.addEventListener("change", onPoisonToggle);
     DOMElements.pickBtn.addEventListener("click", onPick);
@@ -156,6 +156,7 @@ function filterPicker() {
     utils.qsa(".picker-item").forEach(el => el.style.display = el.textContent.toLowerCase().includes(query) ? "" : "none");
 }
 
+/* REMOVED: toggleMeta function
 function toggleMeta() {
     const btn = DOMElements.toggleMetaBtn;
     const showing = btn.getAttribute("aria-pressed") === "true";
@@ -163,6 +164,7 @@ function toggleMeta() {
     btn.textContent = showing ? "Show Ask/Reveal" : "Hide Ask/Reveal";
     utils.qsa(".meta").forEach(el => el.style.display = showing ? "none" : "");
 }
+*/
 
 function resetAll() {
     ui.renderRoleForm(DOMElements.roleForm, DATA);
@@ -274,13 +276,18 @@ function buildInfoListHtml(stepId, isPoisoned = false) {
         displayDemons.push(fakeDemon);
     }
 
+    const createListItem = (item) => {
+        const imgUrl = utils.cardUrlFor(item.role);
+        return `<li><img src="${imgUrl}" alt="${item.role} token" class="role-token-small" /> ${item.name} (${item.role})</li>`;
+    };
+
     if (stepId === 'evil_team_info') {
         let html = '';
         if (displayDemons.length > 0) {
-            html += `<h4>Demon</h4><ul>${displayDemons.map(d => `<li>${d.name} (${d.role})</li>`).join('')}</ul>`;
+            html += `<h4>Demon</h4><ul class="info-list">${displayDemons.map(createListItem).join('')}</ul>`;
         }
         if (minions.length > 0) {
-            html += `<h4>Minions</h4><ul>${minions.map(m => `<li>${m.name} (${m.role})</li>`).join('')}</ul>`;
+            html += `<h4>Minions</h4><ul class="info-list">${minions.map(createListItem).join('')}</ul>`;
         }
         return html || '<h4>No Evil Players</h4>';
     }

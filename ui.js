@@ -144,6 +144,16 @@ export function renderValueDisplay(step, value) {
         
         img.style.display = 'none';
         fig.insertBefore(multiImageContainer, cap);
+    
+    // START OF CHANGE: Display Poisoner token for the Poisoner step
+    } else if (step.role === "Poisoner") { 
+        const tokenToShow = "Poisoner";
+        fig.hidden = false;
+        // Optionally update the caption to provide more context for the storyteller
+        cap.textContent = "Poisoner: Choose Target"; 
+        img.src = cardUrlFor(tokenToShow);
+        img.alt = `${tokenToShow} token`;
+        img.onerror = () => img.removeAttribute("src");
 
     } else if (step.revealType === "token") {
         const tokenToShow = (step.role === "Scarlet Woman") ? "Imp" : value;

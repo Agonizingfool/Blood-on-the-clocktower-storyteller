@@ -378,6 +378,40 @@ li.active, li.active:hover {
   margin-top: 0.5rem;
   width: 100%;
 }
+
+/* --- NEW STYLES FOR EVIL TEAM INFO LIST --- */
+.role-token-small {
+    width: 2.5em; /* Slightly larger token for better visibility */
+    height: 2.5em;
+    border-radius: 50%;
+    object-fit: cover;
+    vertical-align: middle;
+    margin-right: 10px;
+    background: #111;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+#textCardTokenCaption ul.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: clamp(1.2rem, 3vw, 2.5rem); 
+  line-height: 1.5;
+  text-align: left;
+}
+#textCardTokenCaption ul.info-list li {
+  margin: 10px 0; 
+  display: flex; 
+  align-items: center;
+}
+#textCardTokenCaption h4 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  text-align: center;
+}
+/* --- END NEW STYLES --- */
+
 #textCardTokenCaption ul {
   list-style: none;
   padding: 0;
