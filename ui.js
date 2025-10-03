@@ -6,6 +6,7 @@ import { characterCountsData } from './character-counts.js'; // NEW IMPORT
 
 /** Renders the initial role selection form. */
 export function renderRoleForm(formElement, data) {
+    // vvv THIS BLOCK HAS BEEN CHANGED to remove alphabetical sorting vvv
     const byTeam = {
         Townsfolk: data.roles.filter(r => r.team === "Townsfolk"),
         Outsider:  data.roles.filter(r => r.team === "Outsider"),
@@ -13,9 +14,10 @@ export function renderRoleForm(formElement, data) {
         Demon:     data.roles.filter(r => r.team === "Demon")
     };
 
-    const towns = data.roles.filter(r => r.team === "Townsfolk").map(r => r.name);
-    const outsiders = data.roles.filter(r => r.team === "Outsider").map(r => r.name);
-    const minions = data.roles.filter(r => r.team === "Minion").map(r => r.name);
+    const towns = data.roles.filter(r => r.team === "Townsfolk").map(r => r.name).sort();
+    const outsiders = data.roles.filter(r => r.team === "Outsider").map(r => r.name).sort();
+    const minions = data.roles.filter(r => r.team === "Minion").map(r => r.name).sort();
+    const bluffableRoles = [...towns, ...outsiders]; 
     
     // We are no longer calculating static maxCounts here since they are updated live.
     const teamOrder = ["Townsfolk", "Outsider", "Minion", "Demon"];
@@ -40,9 +42,9 @@ export function renderRoleForm(formElement, data) {
                     break;
                 case "Imp":
                     presetHtml = `
-                        <select id="presetDemonBluff1" class="role-preset-select"><option value="">— bluff 1 —</option>${towns.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
-                        <select id="presetDemonBluff2" class="role-preset-select"><option value="">— bluff 2 —</option>${towns.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
-                        <select id="presetDemonBluff3" class="role-preset-select"><option value="">— bluff 3 —</option>${towns.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
+                        <select id="presetDemonBluff1" class="role-preset-select"><option value="">— bluff 1 —</option>${bluffableRoles.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
+                        <select id="presetDemonBluff2" class="role-preset-select"><option value="">— bluff 2 —</option>${bluffableRoles.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
+                        <select id="presetDemonBluff3" class="role-preset-select"><option value="">— bluff 3 —</option>${bluffableRoles.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
                     `;
                     break;
             }
