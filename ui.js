@@ -95,21 +95,22 @@ export function updateLegendCounts(playerCount) {
         const countSpan = fieldset.querySelector('.role-current-count');
         
         if (countSpan) {
+            // Set the team type as a data attribute on the span for CSS styling
+            countSpan.dataset.teamType = team;
+
             if (playerCount < 5) {
                 countSpan.textContent = '(Min 5 players)';
+                // Use inline style only for the muted color when disabled
                 countSpan.style.color = 'var(--muted)';
             } else if (counts && counts[team] !== undefined) {
                 const count = counts[team];
                 countSpan.textContent = `(${count} required)`;
                 
-                // Color code the count slightly for emphasis
-                if (team === 'Townsfolk' || team === 'Outsider') {
-                    countSpan.style.color = '#0077be'; // Blue (Good)
-                } else if (team === 'Minion' || team === 'Demon') {
-                    countSpan.style.color = '#c92a2a'; // Red (Evil)
-                }
+                // Clear inline color so CSS rules take over
+                countSpan.style.color = ''; 
             } else {
                  countSpan.textContent = '';
+                 countSpan.style.color = '';
             }
         }
     });

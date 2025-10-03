@@ -62,6 +62,42 @@ legend { color: var(--muted); padding: 0 6px; }
     font-weight: 600; /* Bold the number */
     margin-left: 4px;
 }
+/* NEW STYLE for the selected role count */
+.role-selected-count {
+    font-size: 1.0em;
+    font-weight: 700; /* Make it bolder to stand out */
+    margin-left: 4px;
+}
+/* Color coding for the role count in the legend - APPLIED TO ALL TEAMS */
+.role-current-count[data-team-type="Townsfolk"] {
+    color: #0077be; /* Blue (Good) */
+}
+.role-current-count[data-team-type="Outsider"] {
+    color: #0077be; /* Blue (Good) */
+}
+.role-current-count[data-team-type="Minion"] {
+    color: #c92a2a; /* Red (Evil) */
+}
+.role-current-count[data-team-type="Demon"] {
+    color: #c92a2a; /* Red (Evil) */
+}
+/* Color coding for selected counts */
+.role-selected-count[data-team-type="Townsfolk"] {
+    color: #0077be; /* Blue (Good) */
+}
+.role-selected-count[data-team-type="Outsider"] {
+    color: #0077be; /* Blue (Good) */
+}
+.role-selected-count[data-team-type="Minion"] {
+    color: #c92a2a; /* Red (Evil) */
+}
+.role-selected-count[data-team-type="Demon"] {
+    color: #c92a2a; /* Red (Evil) */
+}
+/* Muted state for when player count is too low */
+.role-current-count.muted-count {
+    color: var(--muted) !important;
+}
 
 label { cursor: pointer; display: inline-flex; align-items: center; }
 input[type="checkbox"] {
@@ -453,9 +489,9 @@ li.active, li.active:hover {
     align-self: center;
 }
 
-/* 2. Make the content of the caption (the number or token name) massive */
+/* 2. Make the content of the caption (the number or token name) massive, but capped lower */
 #textCardFigure:not([hidden]) #textCardTokenCaption {
-    font-size: clamp(6vw, 20vw, 2rem);
+    font-size: clamp(6rem, 20vw, 120px); /* REDUCED max size to 120px */
     font-weight: 900;
     line-height: 1.1;
     margin-top: 0;
