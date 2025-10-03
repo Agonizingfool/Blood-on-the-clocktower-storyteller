@@ -2,6 +2,7 @@
 // Handles all rendering and direct DOM manipulation.
 
 import { qs, qsa, cardUrlFor } from './utils.js';
+import { characterCountsData } from './character-counts.js'; // NEW IMPORT
 
 /** Renders the initial role selection form. */
 export function renderRoleForm(formElement, data) {
@@ -16,9 +17,12 @@ export function renderRoleForm(formElement, data) {
     const outsiders = data.roles.filter(r => r.team === "Outsider").map(r => r.name);
     const minions = data.roles.filter(r => r.team === "Minion").map(r => r.name);
     
-    formElement.innerHTML = ["Townsfolk", "Outsider", "Minion", "Demon"].map(team => `
-      <fieldset>
-        <legend>${team}</legend>
+    // We are no longer calculating static maxCounts here since they are updated live.
+    const teamOrder = ["Townsfolk", "Outsider", "Minion", "Demon"];
+
+    formElement.innerHTML = teamOrder.map(team => `
+      <fieldset data-team-type="${team}">
+        <legend>${team} <span class="role-current-count"></span></legend>
         ${byTeam[team].map(r => {
             let presetHtml = '';
             switch(r.name) {
@@ -77,6 +81,38 @@ export function renderRoleForm(formElement, data) {
         toggleControls(checkbox.checked);
         checkbox.addEventListener('change', e => toggleControls(e.target.checked));
     });
+    
+    // Initial call to show empty state or default value
+    updateLegendCounts(0); 
+}
+
+/** Updates the role selection fieldset legends with the required number of roles. */
+export function updateLegendCounts(playerCount) {
+    const counts = characterCountsData[Math.min(playerCount, 15)];
+    
+    qsa('fieldset[data-team-type]').forEach(fieldset => {
+        const team = fieldset.dataset.teamType;
+        const countSpan = fieldset.querySelector('.role-current-count');
+        
+        if (countSpan) {
+            if (playerCount < 5) {
+                countSpan.textContent = '(Min 5 players)';
+                countSpan.style.color = 'var(--muted)';
+            } else if (counts && counts[team] !== undefined) {
+                const count = counts[team];
+                countSpan.textContent = `(${count} required)`;
+                
+                // Color code the count slightly for emphasis
+                if (team === 'Townsfolk' || team === 'Outsider') {
+                    countSpan.style.color = '#0077be'; // Blue (Good)
+                } else if (team === 'Minion' || team === 'Demon') {
+                    countSpan.style.color = '#c92a2a'; // Red (Evil)
+                }
+            } else {
+                 countSpan.textContent = '';
+            }
+        }
+    });
 }
 
 
@@ -114,7 +150,7 @@ export function renderValueDisplay(step, value) {
     img.onerror = null;
     cap.innerHTML = "";
     fig.hidden = true;
-
+    
     // --- 2. Render based on step type ---
     if (step.id === 'demon_bluffs' && Array.isArray(value) && value.some(v => v)) {
         fig.hidden = false;
@@ -133,7 +169,7 @@ export function renderValueDisplay(step, value) {
                 bluffImg.src = cardUrlFor(bluff);
                 bluffImg.alt = `${bluff} token`;
                 bluffImg.style.maxWidth = 'min(25vw, 150px)';
-                bluffImg.style.maxHeight = '30vh';
+                bluffImg.maxHeight = '30vh';
                 bluffImg.style.borderRadius = '50%';
                 bluffImg.style.background = '#111';
                 bluffImg.style.boxShadow = 'var(--shadow)';
@@ -144,17 +180,13 @@ export function renderValueDisplay(step, value) {
         
         img.style.display = 'none';
         fig.insertBefore(multiImageContainer, cap);
-    
-    // START OF CHANGE: Display Poisoner token for the Poisoner step
-    } else if (step.role === "Poisoner") { 
-        const tokenToShow = "Poisoner";
-        fig.hidden = false;
-        // Optionally update the caption to provide more context for the storyteller
-        cap.textContent = "Poisoner: Choose Target"; 
-        img.src = cardUrlFor(tokenToShow);
-        img.alt = `${tokenToShow} token`;
-        img.onerror = () => img.removeAttribute("src");
 
+    } else if (step.role === "Poisoner") {
+        fig.hidden = false;
+        cap.textContent = step.role;
+        img.src = cardUrlFor(step.role);
+        img.alt = `${step.role} token`;
+        img.onerror = () => img.removeAttribute("src");
     } else if (step.revealType === "token") {
         const tokenToShow = (step.role === "Scarlet Woman") ? "Imp" : value;
         if (!tokenToShow || tokenToShow === "0") {

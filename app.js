@@ -17,7 +17,6 @@ const DOMElements = {
     roleForm: utils.qs("#roleForm"),
     generateBtn: utils.qs("#generateBtn"),
     resetBtn: utils.qs("#resetBtn"),
-    // REMOVED: toggleMetaBtn: utils.qs("#toggleMetaBtn"),
     firstNightList: utils.qs("#firstNightList"),
     eachNightList: utils.qs("#eachNightList"),
     textCard: utils.qs("#textCard"),
@@ -37,9 +36,12 @@ async function initialize() {
         DATA = await utils.loadJSON("tbData.json");
         ui.renderRoleForm(DOMElements.roleForm, DATA);
         attachEventListeners();
-        // ADD THIS BLOCK
+        
+        // Initial call to ensure labels are updated if roles were pre-checked 
+        // (though we rely on player count input primarily now)
         const initialRoles = utils.qsa('input[name="role"]:checked');
         updateCharacterCountDisplay(initialRoles.length);
+        
     } catch (e) {
         alert("Failed to initialize. See console for details.");
         console.error(e);
@@ -49,7 +51,6 @@ async function initialize() {
 function attachEventListeners() {
     DOMElements.generateBtn.addEventListener("click", onGenerate);
     DOMElements.resetBtn.addEventListener("click", resetAll);
-    // REMOVED: DOMElements.toggleMetaBtn.addEventListener("click", toggleMeta);
     DOMElements.textCardCloseBtn.addEventListener("click", () => ui.openTextCard(false));
     DOMElements.poisonToggle.addEventListener("change", onPoisonToggle);
     DOMElements.pickBtn.addEventListener("click", onPick);
@@ -59,20 +60,22 @@ function attachEventListeners() {
         if (e.key.toLowerCase() === "p" && DOMElements.textCard.classList.contains("show")) DOMElements.poisonToggle.click();
         if (e.key === "Escape") { ui.openTextCard(false); ui.openPicker(false); }
     });
-    // ADD THIS LISTENER
+    // MODIFIED THIS LISTENER to update the legend counts dynamically
     DOMElements.playerCountInput.addEventListener('input', (e) => {
         const count = parseInt(e.target.value, 10);
         if (count >= 5) {
             updateCharacterCountDisplay(count);
+            ui.updateLegendCounts(count); // NEW CALL
         } else {
             // Clear the display if the number is too low
             const displayContainer = utils.qs('#character-counts-display');
             if (displayContainer) displayContainer.innerHTML = '';
+            ui.updateLegendCounts(0); // Pass 0 to clear legend counts
         }
     });
 }
 
-// --- Event Handlers ---
+// --- Event Handlers (rest unchanged) ---
 function onGenerate() {
     RNG = utils.mulberry32(utils.newSeed());
     STEP_STATE.clear();
@@ -81,7 +84,7 @@ function onGenerate() {
     const names = readPlayerNames();
     ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep);
     ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep);
-    ui.toggleFullscreen(true);
+    // REMOVED: ui.toggleFullscreen(true); to prevent the automatic script pop-up
 }
 
 function openStep(listId, index, step, clickedLi) {
@@ -101,7 +104,7 @@ function openStep(listId, index, step, clickedLi) {
     DOMElements.pickBtn.style.display = (step.revealType || step.role === "Poisoner") ? 'inline-block' : 'none';
     
     ui.renderValueDisplay(step, value);
-    ui.openTextCard(true);
+    ui.openTextCard(true); // NOTE: This still opens the token/number card when you click an *individual* step.
 }
 
 function onPoisonToggle() {
@@ -156,16 +159,6 @@ function filterPicker() {
     utils.qsa(".picker-item").forEach(el => el.style.display = el.textContent.toLowerCase().includes(query) ? "" : "none");
 }
 
-/* REMOVED: toggleMeta function
-function toggleMeta() {
-    const btn = DOMElements.toggleMetaBtn;
-    const showing = btn.getAttribute("aria-pressed") === "true";
-    btn.setAttribute("aria-pressed", String(!showing));
-    btn.textContent = showing ? "Show Ask/Reveal" : "Hide Ask/Reveal";
-    utils.qsa(".meta").forEach(el => el.style.display = showing ? "none" : "");
-}
-*/
-
 function resetAll() {
     ui.renderRoleForm(DOMElements.roleForm, DATA);
     DOMElements.firstNightList.innerHTML = "";
@@ -177,6 +170,7 @@ function resetAll() {
     DOMElements.playerCountInput.value = '';
     const displayContainer = utils.qs('#character-counts-display');
     if (displayContainer) displayContainer.innerHTML = '';
+    ui.updateLegendCounts(0); // NEW CALL on reset
 }
 
 
@@ -276,18 +270,21 @@ function buildInfoListHtml(stepId, isPoisoned = false) {
         displayDemons.push(fakeDemon);
     }
 
+    // Helper function to create an HTML list item with a role token and name
     const createListItem = (item) => {
+        // Use cardUrlFor to get the image source
         const imgUrl = utils.cardUrlFor(item.role);
+        // Add a class 'role-token-small' for styling (to be added to styles.css)
         return `<li><img src="${imgUrl}" alt="${item.role} token" class="role-token-small" /> ${item.name} (${item.role})</li>`;
     };
 
     if (stepId === 'evil_team_info') {
         let html = '';
         if (displayDemons.length > 0) {
-            html += `<h4>Demon</h4><ul class="info-list">${displayDemons.map(createListItem).join('')}</ul>`;
+            html += `<h4>Demon</h4><ul>${displayDemons.map(createListItem).join('')}</ul>`;
         }
         if (minions.length > 0) {
-            html += `<h4>Minions</h4><ul class="info-list">${minions.map(createListItem).join('')}</ul>`;
+            html += `<h4>Minions</h4><ul>${minions.map(createListItem).join('')}</ul>`;
         }
         return html || '<h4>No Evil Players</h4>';
     }

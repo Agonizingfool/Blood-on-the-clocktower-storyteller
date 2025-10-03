@@ -1,5 +1,5 @@
 // Data for character counts based on the number of players
-const characterCountsData = {
+export const characterCountsData = { // EXPORTED FOR ACCESS IN UI.JS
     5: { Townsfolk: 3, Outsiders: 0, Minions: 1, Demons: 1 },
     6: { Townsfolk: 3, Outsiders: 1, Minions: 1, Demons: 1 },
     7: { Townsfolk: 5, Outsiders: 0, Minions: 1, Demons: 1 },
