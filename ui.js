@@ -2,11 +2,10 @@
 // Handles all rendering and direct DOM manipulation.
 
 import { qs, qsa, cardUrlFor } from './utils.js';
-import { characterCountsData } from './character-counts.js'; // NEW IMPORT
+import { characterCountsData } from './character-counts.js';
 
 /** Renders the initial role selection form. */
 export function renderRoleForm(formElement, data) {
-    // vvv THIS BLOCK HAS BEEN CHANGED to remove alphabetical sorting vvv
     const byTeam = {
         Townsfolk: data.roles.filter(r => r.team === "Townsfolk"),
         Outsider:  data.roles.filter(r => r.team === "Outsider"),
@@ -19,7 +18,6 @@ export function renderRoleForm(formElement, data) {
     const minions = data.roles.filter(r => r.team === "Minion").map(r => r.name).sort();
     const bluffableRoles = [...towns, ...outsiders]; 
     
-    // We are no longer calculating static maxCounts here since they are updated live.
     const teamOrder = ["Townsfolk", "Outsider", "Minion", "Demon"];
 
     formElement.innerHTML = teamOrder.map(team => `
@@ -84,31 +82,28 @@ export function renderRoleForm(formElement, data) {
         checkbox.addEventListener('change', e => toggleControls(e.target.checked));
     });
     
-    // Initial call to show empty state or default value
     updateLegendCounts(0); 
 }
 
 /** Updates the role selection fieldset legends with the required number of roles. */
 export function updateLegendCounts(playerCount) {
-    const counts = characterCountsData[Math.min(playerCount, 15)];
+    const countsData = characterCountsData[Math.min(playerCount, 15)];
     
     qsa('fieldset[data-team-type]').forEach(fieldset => {
-        const team = fieldset.dataset.teamType;
+        const team = fieldset.dataset.teamType; // e.g., "Outsider"
+        // FIX: Map singular team name to the plural key used in the data file
+        const teamKey = team === 'Townsfolk' ? 'Townsfolk' : `${team}s`; // "Outsider" -> "Outsiders"
         const countSpan = fieldset.querySelector('.role-current-count');
         
         if (countSpan) {
-            // Set the team type as a data attribute on the span for CSS styling
             countSpan.dataset.teamType = team;
 
             if (playerCount < 5) {
                 countSpan.textContent = '(Min 5 players)';
-                // Use inline style only for the muted color when disabled
                 countSpan.style.color = 'var(--muted)';
-            } else if (counts && counts[team] !== undefined) {
-                const count = counts[team];
+            } else if (countsData && countsData[teamKey] !== undefined) { // Use the corrected key
+                const count = countsData[teamKey];
                 countSpan.textContent = `(${count} required)`;
-                
-                // Clear inline color so CSS rules take over
                 countSpan.style.color = ''; 
             } else {
                  countSpan.textContent = '';
