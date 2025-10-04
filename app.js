@@ -10,7 +10,7 @@ let DATA = null;
 let RNG = null;
 const STEP_STATE = new Map();
 let POISONED_ROLE_FOR_NIGHT = null;
-let PLAYER_POOL = new Map(); // Using a Map to store players and their assigned roles
+let PLAYER_POOL = new Map();
 
 // --- DOM Element References ---
 const DOMElements = {
@@ -61,6 +61,10 @@ function attachEventListeners() {
     DOMElements.playerPoolDisplay.addEventListener("click", onPlayerTagClick);
     DOMElements.roleForm.addEventListener('change', onRoleAssign);
 
+    // Night List Listeners (for status toggles and opening steps)
+    DOMElements.firstNightList.addEventListener("click", onNightListClick);
+    DOMElements.eachNightList.addEventListener("click", onNightListClick);
+
     document.addEventListener("keydown", e => {
         if (e.key === "Enter" && document.activeElement === DOMElements.playerPoolInput) {
             DOMElements.addPlayersBtn.click();
@@ -83,13 +87,44 @@ function attachEventListeners() {
 
 // --- Event Handlers ---
 
+function onNightListClick(event) {
+    const statusToggle = event.target.closest('.status-toggle');
+    const li = event.target.closest('li');
+
+    // Handle status toggle click
+    if (statusToggle) {
+        const roleName = statusToggle.dataset.role;
+        if (!roleName) return;
+
+        const playerName = readPlayerNames().get(roleName);
+        if (!playerName) return;
+
+        const player = PLAYER_POOL.get(playerName);
+        if (!player) return;
+
+        player.isDead = !player.isDead; // Toggle the status
+        
+        rerenderScriptsAndPool();
+        return;
+    }
+
+    // Handle opening the step card (but not for dead roles)
+    if (li && li.dataset.stepKey && !li.classList.contains('dead')) {
+        const [listId, idx] = li.dataset.stepKey.split(":");
+        const step = (listId === "firstNightList" ? DATA.firstNight : DATA.eachNight)[+idx];
+        if (step) {
+            openStep(listId, parseInt(idx), step, li);
+        }
+    }
+}
+
 function onAddPlayers() {
     const names = DOMElements.playerPoolInput.value
         .split(',')
         .map(name => name.trim())
         .filter(name => name && !PLAYER_POOL.has(name));
 
-    names.forEach(name => PLAYER_POOL.set(name, { assignedRole: null }));
+    names.forEach(name => PLAYER_POOL.set(name, { assignedRole: null, isDead: false }));
 
     DOMElements.playerPoolInput.value = '';
     ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
@@ -99,16 +134,16 @@ function onAddPlayers() {
 function onPlayerTagClick(event) {
     if (event.target.classList.contains('remove-player-btn')) {
         const playerName = event.target.dataset.name;
+        
+        // Unassign the role if the player had one
         const player = PLAYER_POOL.get(playerName);
-
         if (player && player.assignedRole) {
-            const select = utils.qs(`select[data-role-name="${player.assignedRole}"]`, DOMElements.roleForm);
+            const select = utils.qs(`select[data-role-name="${player.assignedRole}"]`);
             if (select) select.value = '';
         }
 
         PLAYER_POOL.delete(playerName);
-        ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
-        updateAllRoleDropdowns();
+        rerenderScriptsAndPool();
     }
 }
 
@@ -119,42 +154,29 @@ function onRoleAssign(event) {
     const roleName = target.dataset.roleName;
     const selectedPlayerName = target.value;
 
-    // Clear any previous assignment for THIS role
     PLAYER_POOL.forEach(p => {
-        if (p.assignedRole === roleName) {
-            p.assignedRole = null;
-        }
+        if (p.assignedRole === roleName) p.assignedRole = null;
     });
-
-    // If a player was selected, assign them
+    
     if (selectedPlayerName) {
         const player = PLAYER_POOL.get(selectedPlayerName);
-        if (!player) return; // Safeguard
+        if (!player) return;
 
-        // If this player was assigned somewhere else, clear that OTHER dropdown
         if (player.assignedRole && player.assignedRole !== roleName) {
             const oldSelect = utils.qs(`select[data-role-name="${player.assignedRole}"]`);
             if (oldSelect) oldSelect.value = '';
         }
-
-        // Assign the new role to the player
         player.assignedRole = roleName;
     }
 
-    // Update UI
-    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
-    updateAllRoleDropdowns();
+    rerenderScriptsAndPool();
 }
-
 
 function onGenerate() {
     RNG = utils.mulberry32(utils.newSeed());
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
-    const roles = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
-    const names = readPlayerNames();
-    ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep);
-    ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep);
+    rerenderScriptsAndPool();
 }
 
 function openStep(listId, index, step, clickedLi) {
@@ -242,7 +264,6 @@ function filterPicker() {
 }
 
 function resetAll() {
-    // Reset the UI elements and game state
     ui.renderRoleForm(DOMElements.roleForm, DATA);
     DOMElements.firstNightList.innerHTML = "";
     DOMElements.eachNightList.innerHTML = "";
@@ -251,20 +272,27 @@ function resetAll() {
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
     
-    // Unassign all players in the pool
     PLAYER_POOL.forEach(player => {
         player.assignedRole = null;
+        player.isDead = false;
     });
 
-    // Update the UI to reflect the changes
-    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
-    updateAllRoleDropdowns();
+    rerenderScriptsAndPool();
     updateCharacterCountDisplay(0);
     ui.updateLegendCounts(0);
 }
 
 
 // --- State and Logic Helpers ---
+function rerenderScriptsAndPool() {
+    const roles = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
+    const names = readPlayerNames();
+    
+    ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, PLAYER_POOL);
+    ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, PLAYER_POOL);
+    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    updateAllRoleDropdowns();
+}
 
 function updateAllRoleDropdowns() {
     const allSelects = utils.qsa('select.player-assign-select', DOMElements.roleForm);
