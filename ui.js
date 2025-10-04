@@ -68,12 +68,18 @@ export function renderRoleForm(formElement, data) {
                     `;
                     break;
             }
-            // MODIFIED: Replaced the text input with a dropdown select for player assignment
+            
             const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Unassigned —</option></select>`;
             
+            // NEW: Add a checkbox for the Drunk, but only for Townsfolk
+            const drunkCheckboxHtml = (r.team === 'Townsfolk')
+                ? `<label class="drunk-label"><input type="checkbox" class="drunk-checkbox" data-role-name="${r.name}"> Is Drunk</label>`
+                : '';
+
             const controlsHtml = `
                 <div class="role-controls" style="display: none;">
                     ${playerAssignHtml}
+                    ${drunkCheckboxHtml}
                     ${presetHtml}
                 </div>
             `;

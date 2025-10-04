@@ -60,6 +60,7 @@ function attachEventListeners() {
     DOMElements.addPlayersBtn.addEventListener("click", onAddPlayers);
     DOMElements.playerPoolDisplay.addEventListener("click", onPlayerTagClick);
     DOMElements.roleForm.addEventListener('change', onRoleAssign);
+    DOMElements.roleForm.addEventListener('change', onDrunkCheck); // <-- NEW LISTENER
 
     document.addEventListener("keydown", e => {
         if (e.key === "Enter" && document.activeElement === DOMElements.playerPoolInput) {
@@ -88,8 +89,9 @@ function onAddPlayers() {
         .split(',')
         .map(name => name.trim())
         .filter(name => name && !PLAYER_POOL.has(name));
-
-    names.forEach(name => PLAYER_POOL.set(name, { assignedRole: null }));
+    
+    // MODIFIED: Added isDrunk property to the player state
+    names.forEach(name => PLAYER_POOL.set(name, { assignedRole: null, isDrunk: false }));
 
     DOMElements.playerPoolInput.value = '';
     ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
@@ -140,12 +142,44 @@ function onRoleAssign(event) {
         // Assign the new role to the player
         player.assignedRole = roleName;
     }
+    
+    // Re-evaluate Drunk status after any role change
+    onDrunkCheck({ target: utils.qs('.drunk-checkbox') || document.body });
+
 
     // Update UI
     ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
     updateAllRoleDropdowns();
 }
 
+// NEW: Handles updating the Drunk state
+function onDrunkCheck(event) {
+    const target = event.target;
+    // Check if the event is relevant, but proceed with the logic regardless to allow re-syncing
+    if (target.classList.contains('drunk-checkbox')) {
+        // Ensure only one drunk checkbox is checked at a time in the UI
+        if (target.checked) {
+            utils.qsa('.drunk-checkbox').forEach(box => {
+                if (box !== target) box.checked = false;
+            });
+        }
+    }
+
+    // Reset all isDrunk flags in the state first
+    PLAYER_POOL.forEach(player => player.isDrunk = false);
+
+    // Find the single checked box (if any) and update the corresponding player's state
+    const checkedDrunkBox = utils.qs('.drunk-checkbox:checked');
+    if (checkedDrunkBox) {
+        const drunkRoleName = checkedDrunkBox.dataset.roleName;
+        for (const player of PLAYER_POOL.values()) {
+            if (player.assignedRole === drunkRoleName) {
+                player.isDrunk = true;
+                break; // Stop after finding the assigned player
+            }
+        }
+    }
+}
 
 function onGenerate() {
     RNG = utils.mulberry32(utils.newSeed());
@@ -157,6 +191,7 @@ function onGenerate() {
     ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep);
 }
 
+// MODIFIED: Core logic now checks for the Drunk player
 function openStep(listId, index, step, clickedLi) {
     utils.qsa("li.active").forEach(li => li.classList.remove("active"));
     clickedLi.classList.add("active");
@@ -165,11 +200,22 @@ function openStep(listId, index, step, clickedLi) {
     DOMElements.textCard.dataset.key = key;
     const state = ensureState(key, step);
 
-    if (step.role && step.role === POISONED_ROLE_FOR_NIGHT) state.isPoisoned = true;
-    DOMElements.poisonToggle.checked = state.isPoisoned;
+    const roleIsDrunk = isRoleDrunk(step.role);
+
+    // If the role is the Drunk, their info is always false (same as poisoned)
+    if (step.role && roleIsDrunk) {
+        state.isPoisoned = true; // Forcibly set state for consistency
+    } else if (step.role && step.role === POISONED_ROLE_FOR_NIGHT) {
+        state.isPoisoned = true;
+    }
 
     const value = state.isPoisoned ? ensurePoisonedValue(state, step) : ensureTruthfulValue(state, step);
-
+    
+    // The Drunk shouldn't be affected by the Poisoner, so we don't show the toggle.
+    const poisonToggleLabel = DOMElements.poisonToggle.parentElement;
+    if (poisonToggleLabel) poisonToggleLabel.style.display = roleIsDrunk ? 'none' : 'inline-flex';
+    
+    DOMElements.poisonToggle.checked = state.isPoisoned;
     DOMElements.textCardText.textContent = step.ask || "";
     DOMElements.pickBtn.style.display = (step.revealType || step.role === "Poisoner") ? 'inline-block' : 'none';
 
@@ -242,7 +288,6 @@ function filterPicker() {
 }
 
 function resetAll() {
-    // Reset the UI elements and game state
     ui.renderRoleForm(DOMElements.roleForm, DATA);
     DOMElements.firstNightList.innerHTML = "";
     DOMElements.eachNightList.innerHTML = "";
@@ -251,12 +296,11 @@ function resetAll() {
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
     
-    // Unassign all players in the pool
     PLAYER_POOL.forEach(player => {
         player.assignedRole = null;
+        player.isDrunk = false; // Reset drunk state
     });
 
-    // Update the UI to reflect the changes
     ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
     updateAllRoleDropdowns();
     updateCharacterCountDisplay(0);
@@ -265,6 +309,17 @@ function resetAll() {
 
 
 // --- State and Logic Helpers ---
+
+// NEW: Helper to check if a role is being performed by the Drunk
+function isRoleDrunk(roleName) {
+    if (!roleName) return false;
+    for (const player of PLAYER_POOL.values()) {
+        if (player.assignedRole === roleName && player.isDrunk) {
+            return true;
+        }
+    }
+    return false;
+}
 
 function updateAllRoleDropdowns() {
     const allSelects = utils.qsa('select.player-assign-select', DOMElements.roleForm);
