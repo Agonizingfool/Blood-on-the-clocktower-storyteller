@@ -90,9 +90,8 @@ export function updateLegendCounts(playerCount) {
     const countsData = characterCountsData[Math.min(playerCount, 15)];
     
     qsa('fieldset[data-team-type]').forEach(fieldset => {
-        const team = fieldset.dataset.teamType; // e.g., "Outsider"
-        // FIX: Map singular team name to the plural key used in the data file
-        const teamKey = team === 'Townsfolk' ? 'Townsfolk' : `${team}s`; // "Outsider" -> "Outsiders"
+        const team = fieldset.dataset.teamType;
+        const teamKey = team === 'Townsfolk' ? 'Townsfolk' : `${team}s`;
         const countSpan = fieldset.querySelector('.role-current-count');
         
         if (countSpan) {
@@ -101,7 +100,7 @@ export function updateLegendCounts(playerCount) {
             if (playerCount < 5) {
                 countSpan.textContent = '(Min 5 players)';
                 countSpan.style.color = 'var(--muted)';
-            } else if (countsData && countsData[teamKey] !== undefined) { // Use the corrected key
+            } else if (countsData && countsData[teamKey] !== undefined) {
                 const count = countsData[teamKey];
                 countSpan.textContent = `(${count} required)`;
                 countSpan.style.color = ''; 
@@ -152,32 +151,47 @@ export function renderValueDisplay(step, value) {
     // --- 2. Render based on step type ---
     if (step.id === 'demon_bluffs' && Array.isArray(value) && value.some(v => v)) {
         fig.hidden = false;
-        cap.textContent = "Your 3 bluffs";
-        
+        cap.innerHTML = ''; // Clear the main caption
+
         const multiImageContainer = document.createElement('div');
         multiImageContainer.className = 'multi-image-container';
         multiImageContainer.style.display = 'flex';
         multiImageContainer.style.gap = '10px';
         multiImageContainer.style.justifyContent = 'center';
+        multiImageContainer.style.alignItems = 'start';
         multiImageContainer.style.marginTop = '10px';
 
         value.forEach(bluff => {
             if (bluff) {
+                // Create a figure for each bluff to hold the image and its own caption
+                const bluffFigure = document.createElement('figure');
+                bluffFigure.style.margin = '0';
+                bluffFigure.style.textAlign = 'center';
+
                 const bluffImg = document.createElement('img');
                 bluffImg.src = cardUrlFor(bluff);
                 bluffImg.alt = `${bluff} token`;
                 bluffImg.style.maxWidth = 'min(25vw, 150px)';
-                bluffImg.maxHeight = '30vh';
+                bluffImg.style.maxHeight = '30vh';
                 bluffImg.style.borderRadius = '50%';
                 bluffImg.style.background = '#111';
                 bluffImg.style.boxShadow = 'var(--shadow)';
-                bluffImg.onerror = () => bluffImg.remove();
-                multiImageContainer.appendChild(bluffImg);
+                bluffImg.onerror = () => bluffFigure.remove(); // Remove the figure if image fails
+
+                const bluffCaption = document.createElement('figcaption');
+                bluffCaption.textContent = bluff;
+                bluffCaption.style.marginTop = '8px';
+                bluffCaption.style.fontSize = 'clamp(1rem, 2vw, 1.5rem)';
+                bluffCaption.style.fontWeight = '600';
+
+                bluffFigure.appendChild(bluffImg);
+                bluffFigure.appendChild(bluffCaption);
+                multiImageContainer.appendChild(bluffFigure);
             }
         });
         
-        img.style.display = 'none';
-        fig.insertBefore(multiImageContainer, cap);
+        img.style.display = 'none'; // Hide the main single image element
+        fig.insertBefore(multiImageContainer, cap); // Insert the new container of bluffs
 
     } else if (step.role === "Poisoner") {
         fig.hidden = false;

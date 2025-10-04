@@ -26,7 +26,7 @@ const DOMElements = {
     pickBtn: utils.qs("#pickBtn"),
     pickerCancel: utils.qs("#pickerCancel"),
     pickerSearch: utils.qs("#pickerSearch"),
-    // ADD THIS LINE
+    selfKillBtn: utils.qs("#selfKillBtn"), // ADDED
     playerCountInput: utils.qs("#player-count-input"),
 };
 
@@ -37,8 +37,6 @@ async function initialize() {
         ui.renderRoleForm(DOMElements.roleForm, DATA);
         attachEventListeners();
         
-        // Initial call to ensure labels are updated if roles were pre-checked 
-        // (though we rely on player count input primarily now)
         const initialRoles = utils.qsa('input[name="role"]:checked');
         updateCharacterCountDisplay(initialRoles.length);
         
@@ -54,28 +52,27 @@ function attachEventListeners() {
     DOMElements.textCardCloseBtn.addEventListener("click", () => ui.openTextCard(false));
     DOMElements.poisonToggle.addEventListener("change", onPoisonToggle);
     DOMElements.pickBtn.addEventListener("click", onPick);
+    DOMElements.selfKillBtn.addEventListener("click", onSelfKill); // ADDED
     DOMElements.pickerCancel.addEventListener("click", () => ui.openPicker(false));
     DOMElements.pickerSearch.addEventListener("input", filterPicker);
     document.addEventListener("keydown", e => {
         if (e.key.toLowerCase() === "p" && DOMElements.textCard.classList.contains("show")) DOMElements.poisonToggle.click();
         if (e.key === "Escape") { ui.openTextCard(false); ui.openPicker(false); }
     });
-    // MODIFIED THIS LISTENER to update the legend counts dynamically
     DOMElements.playerCountInput.addEventListener('input', (e) => {
         const count = parseInt(e.target.value, 10);
         if (count >= 5) {
             updateCharacterCountDisplay(count);
-            ui.updateLegendCounts(count); // NEW CALL
+            ui.updateLegendCounts(count);
         } else {
-            // Clear the display if the number is too low
             const displayContainer = utils.qs('#character-counts-display');
             if (displayContainer) displayContainer.innerHTML = '';
-            ui.updateLegendCounts(0); // Pass 0 to clear legend counts
+            ui.updateLegendCounts(0);
         }
     });
 }
 
-// --- Event Handlers (rest unchanged) ---
+// --- Event Handlers ---
 function onGenerate() {
     RNG = utils.mulberry32(utils.newSeed());
     STEP_STATE.clear();
@@ -84,7 +81,6 @@ function onGenerate() {
     const names = readPlayerNames();
     ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep);
     ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep);
-    // REMOVED: ui.toggleFullscreen(true); to prevent the automatic script pop-up
 }
 
 function openStep(listId, index, step, clickedLi) {
@@ -101,11 +97,36 @@ function openStep(listId, index, step, clickedLi) {
     const value = state.isPoisoned ? ensurePoisonedValue(state, step) : ensureTruthfulValue(state, step);
     
     DOMElements.textCardText.textContent = step.ask || "";
+    
+    // Manage button visibility
     DOMElements.pickBtn.style.display = (step.revealType || step.role === "Poisoner") ? 'inline-block' : 'none';
     
+    // Show self-kill button specifically for the Imp's night action in "Each Night"
+    const isImpKillStep = step.role === 'Imp' && listId.startsWith('eachNight');
+    DOMElements.selfKillBtn.style.display = isImpKillStep ? 'inline-block' : 'none';
+    
     ui.renderValueDisplay(step, value);
-    ui.openTextCard(true); // NOTE: This still opens the token/number card when you click an *individual* step.
+    ui.openTextCard(true);
 }
+
+/** Handles the Imp's self-kill action, which passes the demon role to a minion. */
+function onSelfKill() {
+    DOMElements.textCardText.textContent = "The Demon has died. You are now the Imp.";
+
+    // Create a temporary step object that mimics the Scarlet Woman's to reuse rendering logic.
+    const displayInfo = {
+        role: "Scarlet Woman", // This triggers the logic in ui.renderValueDisplay to show the Imp token
+        revealType: "token"
+    };
+
+    // Render the Imp token display.
+    ui.renderValueDisplay(displayInfo, "Imp");
+
+    // Hide buttons that are no longer relevant for this view
+    DOMElements.pickBtn.style.display = 'none';
+    DOMElements.selfKillBtn.style.display = 'none';
+}
+
 
 function onPoisonToggle() {
     const key = DOMElements.textCard.dataset.key; if (!key) return;
@@ -166,11 +187,10 @@ function resetAll() {
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
     ui.toggleFullscreen(false);
-    // ADD THIS BLOCK
     DOMElements.playerCountInput.value = '';
     const displayContainer = utils.qs('#character-counts-display');
     if (displayContainer) displayContainer.innerHTML = '';
-    ui.updateLegendCounts(0); // NEW CALL on reset
+    ui.updateLegendCounts(0);
 }
 
 
@@ -270,11 +290,8 @@ function buildInfoListHtml(stepId, isPoisoned = false) {
         displayDemons.push(fakeDemon);
     }
 
-    // Helper function to create an HTML list item with a role token and name
     const createListItem = (item) => {
-        // Use cardUrlFor to get the image source
         const imgUrl = utils.cardUrlFor(item.role);
-        // Add a class 'role-token-small' for styling (to be added to styles.css)
         return `<li><img src="${imgUrl}" alt="${item.role} token" class="role-token-small" /> ${item.name} (${item.role})</li>`;
     };
 

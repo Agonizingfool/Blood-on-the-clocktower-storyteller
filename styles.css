@@ -481,7 +481,7 @@ li.active:hover {
 
 
 /* =================================================================== */
-/* ===== NO CHANGES BEYOND THIS POINT (CARD UI) ====================== */
+/* ===== CARD UI / MODALS / PICKERS ================================== */
 /* =================================================================== */
 
 
@@ -608,6 +608,7 @@ li.active:hover {
 
 #textCardFigure {
   grid-row: 2;
+  width: 100%;
 }
 
 #textCardTokenImg {
@@ -617,12 +618,14 @@ li.active:hover {
   object-fit: cover;
   background: #111;
   box-shadow: var(--shadow);
+  display: block;
+  margin: 0 auto;
 }
 
 #textCardTokenCaption {
   font-size: clamp(1rem, 2.5vw, 2rem);
   font-weight: 700;
-  color: #fff;
+  color: var(--text);
   margin-top: 0.5rem;
   width: 100%;
 }
@@ -641,6 +644,40 @@ li.active:hover {
   margin-bottom: 1rem;
   color: var(--muted);
   text-align: center;
+}
+
+/* Styles for Multi-Bluff Container */
+.multi-image-container {
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to the next line on small screens */
+    justify-content: center; /* Center items horizontally */
+    gap: 15px;
+    margin: 0 auto; /* Center the container itself */
+    max-width: 100%; /* Ensure it doesn't overflow */
+}
+
+.multi-image-container figure {
+    margin: 0;
+    text-align: center;
+    flex-shrink: 0; /* Prevent items from shrinking too much */
+    width: min(30vw, 130px); /* Give each figure a responsive but capped width */
+}
+
+.multi-image-container img {
+    max-width: 100%; /* Make image fill its figure's width */
+    height: auto;
+    border-radius: 50%;
+    background: #111;
+    box-shadow: var(--shadow);
+    display: block;
+}
+
+.multi-image-container figcaption {
+    margin-top: 8px;
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+    font-weight: 600;
+    color: var(--text); /* CORRECTED: Use the existing --text variable */
+    word-break: break-word; /* Prevents long names from overflowing */
 }
 
 #controlRow {
