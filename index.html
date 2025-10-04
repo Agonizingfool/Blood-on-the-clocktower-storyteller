@@ -50,7 +50,7 @@
         </summary>
         <ol id="firstNightList" aria-live="polite" aria-atomic="false"></ol>
       </details>
-      <details class="night-block" open>
+      <details class="night-block">
         <summary>
           <h3>Each Night</h3>
         </summary>
@@ -88,14 +88,12 @@
 
   <div id="picker" class="picker" aria-hidden="true">
     <div class="picker-panel" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
-      <div class="picker-head">
-        <h3 id="pickerTitle">Pick a role</h3>
-        <input id="pickerSearch" type="text" placeholder="Search roles…" autocomplete="off" />
-      </div>
-      <div id="pickerList" class="picker-list" role="listbox"></div>
-      <div class="picker-actions">
-        <button id="pickerCancel" type="button" class="ghost">Cancel</button>
-      </div>
+      <h3 id="pickerTitle">Pick a role</h3>
+      <input id="pickerSearch" type="text" placeholder="Search roles…" autocomplete="off" />
+    </div>
+    <div id="pickerList" class="picker-list" role="listbox"></div>
+    <div class="picker-actions">
+      <button id="pickerCancel" type="button" class="ghost">Cancel</button>
     </div>
   </div>
 
