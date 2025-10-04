@@ -26,7 +26,7 @@ const DOMElements = {
     pickBtn: utils.qs("#pickBtn"),
     pickerCancel: utils.qs("#pickerCancel"),
     pickerSearch: utils.qs("#pickerSearch"),
-    selfKillBtn: utils.qs("#selfKillBtn"), 
+    selfKillBtn: utils.qs("#selfKillBtn"),
     playerCountInput: utils.qs("#player-count-input"),
     playerPoolInput: utils.qs("#player-pool-input"),
     addPlayersBtn: utils.qs("#addPlayersBtn"),
@@ -105,7 +105,7 @@ function onPlayerTagClick(event) {
             const select = utils.qs(`select[data-role-name="${player.assignedRole}"]`, DOMElements.roleForm);
             if (select) select.value = '';
         }
-        
+
         PLAYER_POOL.delete(playerName);
         ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
         updateAllRoleDropdowns();
@@ -125,7 +125,7 @@ function onRoleAssign(event) {
             p.assignedRole = null;
         }
     });
-    
+
     // If a player was selected, assign them
     if (selectedPlayerName) {
         const player = PLAYER_POOL.get(selectedPlayerName);
@@ -169,13 +169,13 @@ function openStep(listId, index, step, clickedLi) {
     DOMElements.poisonToggle.checked = state.isPoisoned;
 
     const value = state.isPoisoned ? ensurePoisonedValue(state, step) : ensureTruthfulValue(state, step);
-    
+
     DOMElements.textCardText.textContent = step.ask || "";
     DOMElements.pickBtn.style.display = (step.revealType || step.role === "Poisoner") ? 'inline-block' : 'none';
-    
+
     const isImpKillStep = step.role === 'Imp' && listId.startsWith('eachNight');
     DOMElements.selfKillBtn.style.display = isImpKillStep ? 'inline-block' : 'none';
-    
+
     ui.renderValueDisplay(step, value);
     ui.openTextCard(true);
 }
@@ -242,17 +242,23 @@ function filterPicker() {
 }
 
 function resetAll() {
+    // Reset the UI elements and game state
     ui.renderRoleForm(DOMElements.roleForm, DATA);
     DOMElements.firstNightList.innerHTML = "";
     DOMElements.eachNightList.innerHTML = "";
     DOMElements.playerCountInput.value = '';
-    DOMElements.playerPoolInput.value = '';
     
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
-    PLAYER_POOL.clear();
     
+    // Unassign all players in the pool
+    PLAYER_POOL.forEach(player => {
+        player.assignedRole = null;
+    });
+
+    // Update the UI to reflect the changes
     ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    updateAllRoleDropdowns();
     updateCharacterCountDisplay(0);
     ui.updateLegendCounts(0);
 }
@@ -262,7 +268,7 @@ function resetAll() {
 
 function updateAllRoleDropdowns() {
     const allSelects = utils.qsa('select.player-assign-select', DOMElements.roleForm);
-    
+
     allSelects.forEach(select => {
         const currentlySelectedPlayer = select.value;
         let optionsHtml = '<option value="">— Unassigned —</option>';
@@ -273,7 +279,7 @@ function updateAllRoleDropdowns() {
                 optionsHtml += `<option value="${name}">${name}</option>`;
             }
         });
-        
+
         select.innerHTML = optionsHtml;
         select.value = currentlySelectedPlayer;
     });
@@ -369,7 +375,7 @@ function buildInfoListHtml(stepId, isPoisoned = false) {
     rolesInPlay.forEach(roleName => {
         const team = teamForRole(roleName);
         const name = playerNames.get(roleName) || roleName;
-        
+
         if (team === 'Minion') minions.push({name: name, role: roleName});
         if (team === 'Demon') demons.push({name: name, role: roleName});
     });
@@ -395,7 +401,7 @@ function buildInfoListHtml(stepId, isPoisoned = false) {
         }
         return html || '<h4>No Evil Players</h4>';
     }
-    
+
     return "";
 }
 
