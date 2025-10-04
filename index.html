@@ -22,6 +22,17 @@
       </div>
     </section>
 
+    <section class="card" id="player-pool-card">
+      <h2 id="playerPoolHeading">Player Pool</h2>
+      <div id="player-pool-input-container">
+        <label for="player-pool-input">Enter Player Names (comma-separated):</label>
+        <textarea id="player-pool-input" rows="2" placeholder="e.g., Alice, Bob, Charlie"></textarea>
+        <button id="addPlayersBtn" type="button">Add Players to Pool</button>
+      </div>
+      <div id="player-pool-display">
+        </div>
+    </section>
+
     <section class="card" aria-labelledby="rolesHeading">
       <h2 id="rolesHeading">Roles in play</h2>
       <form id="roleForm" class="roles" aria-live="polite"></form>
@@ -57,19 +68,16 @@
     <div class="inner">
       <div class="badge" id="textCardBadge">ASK</div>
       <div class="bigtext" id="textCardText"></div>
-
       <div id="controlRow" class="controls" aria-hidden="true">
         <label class="switch">
           <input type="checkbox" id="poisonToggle" />
           <span>Poisoned</span>
         </label>
       </div>
-
       <figure id="textCardFigure" hidden>
         <img id="textCardTokenImg" alt="" />
         <figcaption id="textCardTokenCaption"></figcaption>
       </figure>
-
       <div class="toolbar">
         <button id="pickBtn" type="button" class="ghost">Pick…</button>
         <button id="selfKillBtn" type="button" class="ghost" style="display: none;">Pass to Minion</button>

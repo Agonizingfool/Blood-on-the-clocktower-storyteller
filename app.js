@@ -3,7 +3,6 @@
 
 import * as utils from './utils.js';
 import * as ui from './ui.js';
-// UPDATED THIS LINE
 import { updateCharacterCountDisplay } from './character-counts.js';
 
 // --- App State ---
@@ -11,6 +10,7 @@ let DATA = null;
 let RNG = null;
 const STEP_STATE = new Map();
 let POISONED_ROLE_FOR_NIGHT = null;
+let PLAYER_POOL = new Map(); // Using a Map to store players and their assigned roles
 
 // --- DOM Element References ---
 const DOMElements = {
@@ -26,8 +26,11 @@ const DOMElements = {
     pickBtn: utils.qs("#pickBtn"),
     pickerCancel: utils.qs("#pickerCancel"),
     pickerSearch: utils.qs("#pickerSearch"),
-    selfKillBtn: utils.qs("#selfKillBtn"), // ADDED
+    selfKillBtn: utils.qs("#selfKillBtn"), 
     playerCountInput: utils.qs("#player-count-input"),
+    playerPoolInput: utils.qs("#player-pool-input"),
+    addPlayersBtn: utils.qs("#addPlayersBtn"),
+    playerPoolDisplay: utils.qs("#player-pool-display"),
 };
 
 // --- Initialization ---
@@ -36,10 +39,7 @@ async function initialize() {
         DATA = await utils.loadJSON("tbData.json");
         ui.renderRoleForm(DOMElements.roleForm, DATA);
         attachEventListeners();
-        
-        const initialRoles = utils.qsa('input[name="role"]:checked');
-        updateCharacterCountDisplay(initialRoles.length);
-        
+        updateCharacterCountDisplay(0);
     } catch (e) {
         alert("Failed to initialize. See console for details.");
         console.error(e);
@@ -52,27 +52,101 @@ function attachEventListeners() {
     DOMElements.textCardCloseBtn.addEventListener("click", () => ui.openTextCard(false));
     DOMElements.poisonToggle.addEventListener("change", onPoisonToggle);
     DOMElements.pickBtn.addEventListener("click", onPick);
-    DOMElements.selfKillBtn.addEventListener("click", onSelfKill); // ADDED
+    DOMElements.selfKillBtn.addEventListener("click", onSelfKill);
     DOMElements.pickerCancel.addEventListener("click", () => ui.openPicker(false));
     DOMElements.pickerSearch.addEventListener("input", filterPicker);
+
+    // Player Pool Listeners
+    DOMElements.addPlayersBtn.addEventListener("click", onAddPlayers);
+    DOMElements.playerPoolDisplay.addEventListener("click", onPlayerTagClick);
+    DOMElements.roleForm.addEventListener('change', onRoleAssign);
+
     document.addEventListener("keydown", e => {
-        if (e.key.toLowerCase() === "p" && DOMElements.textCard.classList.contains("show")) DOMElements.poisonToggle.click();
-        if (e.key === "Escape") { ui.openTextCard(false); ui.openPicker(false); }
+        if (e.key === "Enter" && document.activeElement === DOMElements.playerPoolInput) {
+            DOMElements.addPlayersBtn.click();
+        }
+        if (e.key.toLowerCase() === "p" && DOMElements.textCard.classList.contains("show")) {
+            DOMElements.poisonToggle.click();
+        }
+        if (e.key === "Escape") {
+            ui.openTextCard(false);
+            ui.openPicker(false);
+        }
     });
+
     DOMElements.playerCountInput.addEventListener('input', (e) => {
         const count = parseInt(e.target.value, 10);
-        if (count >= 5) {
-            updateCharacterCountDisplay(count);
-            ui.updateLegendCounts(count);
-        } else {
-            const displayContainer = utils.qs('#character-counts-display');
-            if (displayContainer) displayContainer.innerHTML = '';
-            ui.updateLegendCounts(0);
-        }
+        updateCharacterCountDisplay(count >= 5 ? count : 0);
+        ui.updateLegendCounts(count >= 5 ? count : 0);
     });
 }
 
 // --- Event Handlers ---
+
+function onAddPlayers() {
+    const names = DOMElements.playerPoolInput.value
+        .split(',')
+        .map(name => name.trim())
+        .filter(name => name && !PLAYER_POOL.has(name));
+
+    names.forEach(name => PLAYER_POOL.set(name, { assignedRole: null }));
+
+    DOMElements.playerPoolInput.value = '';
+    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    updateAllRoleDropdowns();
+}
+
+function onPlayerTagClick(event) {
+    if (event.target.classList.contains('remove-player-btn')) {
+        const playerName = event.target.dataset.name;
+        const player = PLAYER_POOL.get(playerName);
+
+        if (player && player.assignedRole) {
+            const select = utils.qs(`select[data-role-name="${player.assignedRole}"]`, DOMElements.roleForm);
+            if (select) select.value = '';
+        }
+        
+        PLAYER_POOL.delete(playerName);
+        ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+        updateAllRoleDropdowns();
+    }
+}
+
+function onRoleAssign(event) {
+    const target = event.target;
+    if (target.tagName !== 'SELECT' || !target.classList.contains('player-assign-select')) return;
+
+    const roleName = target.dataset.roleName;
+    const selectedPlayerName = target.value;
+
+    // Clear any previous assignment for THIS role
+    PLAYER_POOL.forEach(p => {
+        if (p.assignedRole === roleName) {
+            p.assignedRole = null;
+        }
+    });
+    
+    // If a player was selected, assign them
+    if (selectedPlayerName) {
+        const player = PLAYER_POOL.get(selectedPlayerName);
+        if (!player) return; // Safeguard
+
+        // If this player was assigned somewhere else, clear that OTHER dropdown
+        if (player.assignedRole && player.assignedRole !== roleName) {
+            const oldSelect = utils.qs(`select[data-role-name="${player.assignedRole}"]`);
+            if (oldSelect) oldSelect.value = '';
+        }
+
+        // Assign the new role to the player
+        player.assignedRole = roleName;
+    }
+
+    // Update UI
+    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    updateAllRoleDropdowns();
+}
+
+
 function onGenerate() {
     RNG = utils.mulberry32(utils.newSeed());
     STEP_STATE.clear();
@@ -97,11 +171,8 @@ function openStep(listId, index, step, clickedLi) {
     const value = state.isPoisoned ? ensurePoisonedValue(state, step) : ensureTruthfulValue(state, step);
     
     DOMElements.textCardText.textContent = step.ask || "";
-    
-    // Manage button visibility
     DOMElements.pickBtn.style.display = (step.revealType || step.role === "Poisoner") ? 'inline-block' : 'none';
     
-    // Show self-kill button specifically for the Imp's night action in "Each Night"
     const isImpKillStep = step.role === 'Imp' && listId.startsWith('eachNight');
     DOMElements.selfKillBtn.style.display = isImpKillStep ? 'inline-block' : 'none';
     
@@ -109,20 +180,10 @@ function openStep(listId, index, step, clickedLi) {
     ui.openTextCard(true);
 }
 
-/** Handles the Imp's self-kill action, which passes the demon role to a minion. */
 function onSelfKill() {
     DOMElements.textCardText.textContent = "The Demon has died. You are now the Imp.";
-
-    // Create a temporary step object that mimics the Scarlet Woman's to reuse rendering logic.
-    const displayInfo = {
-        role: "Scarlet Woman", // This triggers the logic in ui.renderValueDisplay to show the Imp token
-        revealType: "token"
-    };
-
-    // Render the Imp token display.
+    const displayInfo = { role: "Scarlet Woman", revealType: "token" };
     ui.renderValueDisplay(displayInfo, "Imp");
-
-    // Hide buttons that are no longer relevant for this view
     DOMElements.pickBtn.style.display = 'none';
     DOMElements.selfKillBtn.style.display = 'none';
 }
@@ -184,17 +245,40 @@ function resetAll() {
     ui.renderRoleForm(DOMElements.roleForm, DATA);
     DOMElements.firstNightList.innerHTML = "";
     DOMElements.eachNightList.innerHTML = "";
+    DOMElements.playerCountInput.value = '';
+    DOMElements.playerPoolInput.value = '';
+    
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
-    ui.toggleFullscreen(false);
-    DOMElements.playerCountInput.value = '';
-    const displayContainer = utils.qs('#character-counts-display');
-    if (displayContainer) displayContainer.innerHTML = '';
+    PLAYER_POOL.clear();
+    
+    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    updateCharacterCountDisplay(0);
     ui.updateLegendCounts(0);
 }
 
 
 // --- State and Logic Helpers ---
+
+function updateAllRoleDropdowns() {
+    const allSelects = utils.qsa('select.player-assign-select', DOMElements.roleForm);
+    
+    allSelects.forEach(select => {
+        const currentlySelectedPlayer = select.value;
+        let optionsHtml = '<option value="">— Unassigned —</option>';
+
+        PLAYER_POOL.forEach((player, name) => {
+            const isAvailable = !player.assignedRole || name === currentlySelectedPlayer;
+            if (isAvailable) {
+                optionsHtml += `<option value="${name}">${name}</option>`;
+            }
+        });
+        
+        select.innerHTML = optionsHtml;
+        select.value = currentlySelectedPlayer;
+    });
+}
+
 function getStepInfo(key) {
     const [listId, idx] = key.split(":");
     const step = (listId === "firstNightList" ? DATA.firstNight : DATA.eachNight)[+idx];
@@ -246,7 +330,13 @@ function ensurePoisonedValue(state, step) {
 }
 
 function readPlayerNames() {
-    return new Map(utils.qsa('.player-name-input').filter(i => i.value.trim()).map(i => [i.dataset.roleName, i.value.trim()]));
+    const names = new Map();
+    PLAYER_POOL.forEach((player, name) => {
+        if (player.assignedRole) {
+            names.set(player.assignedRole, name);
+        }
+    });
+    return names;
 }
 
 function readPresetValues() {

@@ -4,6 +4,28 @@
 import { qs, qsa, cardUrlFor } from './utils.js';
 import { characterCountsData } from './character-counts.js';
 
+/** Renders the list of players in the Player Pool display. */
+export function renderPlayerPool(displayElement, playerPool) {
+    displayElement.innerHTML = ''; // Clear existing tags
+    if (!playerPool || playerPool.size === 0) return;
+
+    playerPool.forEach((player, name) => {
+        const tag = document.createElement('div');
+        tag.className = 'player-tag';
+        
+        let content = `<span>${name}</span>`;
+        if (player.assignedRole) {
+            tag.classList.add('assigned');
+            content += `<span class="assigned-role">(${player.assignedRole})</span>`;
+        }
+        
+        content += `<button class="remove-player-btn" data-name="${name}" title="Remove ${name}">×</button>`;
+        tag.innerHTML = content;
+        displayElement.appendChild(tag);
+    });
+}
+
+
 /** Renders the initial role selection form. */
 export function renderRoleForm(formElement, data) {
     const byTeam = {
@@ -46,11 +68,12 @@ export function renderRoleForm(formElement, data) {
                     `;
                     break;
             }
-            const nameInputHtml = `<input type="text" class="player-name-input" data-role-name="${r.name}" placeholder="Player Name">`;
+            // MODIFIED: Replaced the text input with a dropdown select for player assignment
+            const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Unassigned —</option></select>`;
             
             const controlsHtml = `
                 <div class="role-controls" style="display: none;">
-                    ${nameInputHtml}
+                    ${playerAssignHtml}
                     ${presetHtml}
                 </div>
             `;
@@ -137,52 +160,32 @@ export function renderValueDisplay(step, value) {
     const img = qs("#textCardTokenImg");
     const cap = qs("#textCardTokenCaption");
 
-    // --- 1. Reset to default state ---
     const oldMultiContainer = fig.querySelector('.multi-image-container');
-    if (oldMultiContainer) {
-        oldMultiContainer.remove();
-    }
+    if (oldMultiContainer) oldMultiContainer.remove();
+    
     img.style.display = 'block';
     img.removeAttribute("src");
     img.onerror = null;
     cap.innerHTML = "";
     fig.hidden = true;
     
-    // --- 2. Render based on step type ---
     if (step.id === 'demon_bluffs' && Array.isArray(value) && value.some(v => v)) {
         fig.hidden = false;
-        cap.innerHTML = ''; // Clear the main caption
+        cap.innerHTML = '';
 
         const multiImageContainer = document.createElement('div');
         multiImageContainer.className = 'multi-image-container';
-        multiImageContainer.style.display = 'flex';
-        multiImageContainer.style.gap = '10px';
-        multiImageContainer.style.justifyContent = 'center';
-        multiImageContainer.style.alignItems = 'start';
-        multiImageContainer.style.marginTop = '10px';
 
         value.forEach(bluff => {
             if (bluff) {
-                // Create a figure for each bluff to hold the image and its own caption
                 const bluffFigure = document.createElement('figure');
-                bluffFigure.style.margin = '0';
-                bluffFigure.style.textAlign = 'center';
-
                 const bluffImg = document.createElement('img');
                 bluffImg.src = cardUrlFor(bluff);
                 bluffImg.alt = `${bluff} token`;
-                bluffImg.style.maxWidth = 'min(25vw, 150px)';
-                bluffImg.style.maxHeight = '30vh';
-                bluffImg.style.borderRadius = '50%';
-                bluffImg.style.background = '#111';
-                bluffImg.style.boxShadow = 'var(--shadow)';
-                bluffImg.onerror = () => bluffFigure.remove(); // Remove the figure if image fails
+                bluffImg.onerror = () => bluffFigure.remove();
 
                 const bluffCaption = document.createElement('figcaption');
                 bluffCaption.textContent = bluff;
-                bluffCaption.style.marginTop = '8px';
-                bluffCaption.style.fontSize = 'clamp(1rem, 2vw, 1.5rem)';
-                bluffCaption.style.fontWeight = '600';
 
                 bluffFigure.appendChild(bluffImg);
                 bluffFigure.appendChild(bluffCaption);
@@ -190,8 +193,8 @@ export function renderValueDisplay(step, value) {
             }
         });
         
-        img.style.display = 'none'; // Hide the main single image element
-        fig.insertBefore(multiImageContainer, cap); // Insert the new container of bluffs
+        img.style.display = 'none';
+        fig.insertBefore(multiImageContainer, cap);
 
     } else if (step.role === "Poisoner") {
         fig.hidden = false;
