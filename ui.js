@@ -142,17 +142,26 @@ export function updateLegendCounts(playerCount) {
 }
 
 
-/** Renders the night script steps into a list element. */
-export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler) {
+export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set()) {
     listElement.innerHTML = "";
     steps.forEach((step, idx) => {
         if (!step.role || rolesInPlay.includes(step.role)) {
             const li = document.createElement("li");
+
+            // NEW: Check if this role is the drunk one and create the emoji indicator
+            const isDrunk = step.role && drunkRoles.has(step.role);
+            const drunkIndicator = isDrunk ? '🍺 ' : '';
+
             let roleDisplay = step.role;
             if (step.role && playerNames.has(step.role)) {
                 roleDisplay = `${step.role} (${playerNames.get(step.role)})`;
             }
-            li.innerHTML = (step.role && step.ask) ? `<strong>${roleDisplay}:</strong> ${step.ask}` : (step.text || step.role);
+
+            // MODIFIED: Prepend the emoji indicator to the line
+            li.innerHTML = (step.role && step.ask) 
+                ? `${drunkIndicator}<strong>${roleDisplay}:</strong> ${step.ask}` 
+                : (step.text || step.role);
+                
             li.dataset.stepKey = `${listId}:${idx}`;
             li.addEventListener("click", () => stepClickHandler(listId, idx, step, li));
             listElement.appendChild(li);

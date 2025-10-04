@@ -187,8 +187,18 @@ function onGenerate() {
     POISONED_ROLE_FOR_NIGHT = null;
     const roles = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
     const names = readPlayerNames();
-    ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep);
-    ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep);
+
+    // NEW: Create a set of roles performed by the Drunk player
+    const drunkRoles = new Set();
+    PLAYER_POOL.forEach(player => {
+        if (player.isDrunk && player.assignedRole) {
+            drunkRoles.add(player.assignedRole);
+        }
+    });
+
+    // MODIFIED: Pass the new drunkRoles set to the render function
+    ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep, drunkRoles);
+    ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep, drunkRoles);
 }
 
 // MODIFIED: Core logic now checks for the Drunk player
