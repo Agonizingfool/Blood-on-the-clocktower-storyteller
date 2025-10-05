@@ -52,7 +52,7 @@ export function renderRoleForm(formElement, data) {
                     presetHtml = `<select id="presetWasherwomanRole" class="role-preset-select"><option value="">— select —</option>${towns.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
                     break;
                 case "Librarian":
-                    presetHtml = `<select id="presetLibrarianRole" class="role-preset-select"><option value="">— none (0) —</option>${outsiders.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
+                    presetHtml = `<select id="presetLibrarianRole" class="role-preset-select"><option value="">No Outsider in play</option>${outsiders.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
                     break;
                 case "Investigator":
                     presetHtml = `<select id="presetInvestigatorRole" class="role-preset-select"><option value="">— select —</option>${minions.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
