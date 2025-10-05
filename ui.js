@@ -187,6 +187,7 @@ export function renderValueDisplay(step, value) {
     if (step.id === 'demon_bluffs' && Array.isArray(value) && value.some(v => v)) {
         fig.hidden = false;
         cap.innerHTML = '';
+        img.style.display = 'none';
 
         const multiImageContainer = document.createElement('div');
         multiImageContainer.className = 'multi-image-container';
@@ -208,9 +209,36 @@ export function renderValueDisplay(step, value) {
             }
         });
         
-        img.style.display = 'none';
         fig.insertBefore(multiImageContainer, cap);
 
+    } else if (step.id === 'evil_team_info' && typeof value === 'object' && value !== null) {
+        const allEvil = [...(value.demons || []), ...(value.minions || [])];
+
+        if (allEvil.length > 0) {
+            fig.hidden = false;
+            cap.innerHTML = '';
+            img.style.display = 'none';
+
+            const multiImageContainer = document.createElement('div');
+            multiImageContainer.className = 'multi-image-container';
+
+            allEvil.forEach(player => {
+                const playerFigure = document.createElement('figure');
+                const playerImg = document.createElement('img');
+                playerImg.src = cardUrlFor(player.role);
+                playerImg.alt = `${player.role} token`;
+                playerImg.onerror = () => playerFigure.remove();
+
+                const playerCaption = document.createElement('figcaption');
+                playerCaption.innerHTML = `<span class="player-name">${player.name}</span><span class="player-role">(${player.role})</span>`;
+
+                playerFigure.appendChild(playerImg);
+                playerFigure.appendChild(playerCaption);
+                multiImageContainer.appendChild(playerFigure);
+            });
+            
+            fig.insertBefore(multiImageContainer, cap);
+        }
     } else if (step.role === "Poisoner") {
         fig.hidden = false;
         cap.textContent = step.role;

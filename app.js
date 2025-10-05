@@ -378,7 +378,7 @@ function ensureTruthfulValue(state, step) {
     } else if (state.revealType === "numeric" && step.role === "Chef") {
         state.truthfulValue = presets.Chef;
     } else if (state.revealType === "info_list") {
-        state.truthfulValue = buildInfoListHtml(step.id);
+        state.truthfulValue = buildInfoList(step.id);
     }
     return state.truthfulValue;
 }
@@ -394,7 +394,7 @@ function ensurePoisonedValue(state, step) {
         if (pol.allowZero && RNG() < (pol.pZero ?? 0.2)) state.poisonedValue = "0";
         else state.poisonedValue = utils.randChoice(poolFor(pol.pool || teamForRole(step.role)), RNG);
     } else if (state.revealType === "info_list") {
-        state.poisonedValue = buildInfoListHtml(step.id, true);
+        state.poisonedValue = buildInfoList(step.id, true);
     }
     return state.poisonedValue;
 }
@@ -430,7 +430,7 @@ function poolFor(poolName) {
     return DATA.roles.filter(r => r.team === poolName).map(r => r.name);
 }
 
-function buildInfoListHtml(stepId, isPoisoned = false) {
+function buildInfoList(stepId, isPoisoned = false) {
     const rolesInPlay = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
     const playerNames = readPlayerNames();
     const minions = [];
@@ -449,24 +449,15 @@ function buildInfoListHtml(stepId, isPoisoned = false) {
         const fakeDemon = utils.randChoice(minions, RNG);
         displayDemons.push(fakeDemon);
     }
-
-    const createListItem = (item) => {
-        const imgUrl = utils.cardUrlFor(item.role);
-        return `<li><img src="${imgUrl}" alt="${item.role} token" class="role-token-small" /> ${item.name} (${item.role})</li>`;
-    };
-
+    
     if (stepId === 'evil_team_info') {
-        let html = '';
-        if (displayDemons.length > 0) {
-            html += `<h4>Demon</h4><ul>${displayDemons.map(createListItem).join('')}</ul>`;
-        }
-        if (minions.length > 0) {
-            html += `<h4>Minions</h4><ul>${minions.map(createListItem).join('')}</ul>`;
-        }
-        return html || '<h4>No Evil Players</h4>';
+        return {
+            demons: displayDemons,
+            minions: minions
+        };
     }
 
-    return "";
+    return null;
 }
 
 // --- Boot ---

@@ -676,9 +676,24 @@ li.active:hover {
     margin-top: 8px;
     font-size: clamp(0.9rem, 2.5vw, 1.2rem);
     font-weight: 600;
-    color: var(--text); /* CORRECTED: Use the existing --text variable */
-    word-break: break-word; /* Prevents long names from overflowing */
+    color: var(--text);
+    word-break: break-word;
+    line-height: 1.3;
 }
+
+/* NEW STYLES for player name/role captions */
+.multi-image-container .player-name {
+    display: block;
+    font-weight: 700;
+}
+
+.multi-image-container .player-role {
+    display: block;
+    font-size: 0.9em;
+    font-weight: 500;
+    color: var(--muted);
+}
+
 
 #controlRow {
   display: none;
@@ -935,4 +950,3 @@ font-size: clamp(1.5rem, 3vw, 2rem);
     outline-offset: 2px;
     border-color: var(--accent);
 }
-
