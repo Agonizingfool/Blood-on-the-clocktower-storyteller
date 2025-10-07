@@ -4,44 +4,20 @@
 import { qs, qsa, cardUrlFor } from './utils.js';
 import { characterCountsData } from './character-counts.js';
 
-/** Renders the list of players in the Player Pool display. */
-export function renderPlayerPool(displayElement, playerPool) {
-    displayElement.innerHTML = ''; // Clear existing tags
-    if (!playerPool || playerPool.size === 0) return;
-
-    playerPool.forEach((player, name) => {
-        const tag = document.createElement('div');
-        tag.className = 'player-tag';
-        
-        let content = `<span>${name}</span>`;
-        if (player.assignedRole) {
-            tag.classList.add('assigned');
-            content += `<span class="assigned-role">(${player.assignedRole})</span>`;
-        }
-        
-        content += `<button class="remove-player-btn" data-name="${name}" title="Remove ${name}">×</button>`;
-        tag.innerHTML = content;
-        displayElement.appendChild(tag);
-    });
-}
-
-
 /** Renders the initial role selection form. */
 export function renderRoleForm(formElement, data) {
+    // ... (no changes in this function)
     const byTeam = {
         Townsfolk: data.roles.filter(r => r.team === "Townsfolk"),
         Outsider:  data.roles.filter(r => r.team === "Outsider"),
         Minion:    data.roles.filter(r => r.team === "Minion"),
         Demon:     data.roles.filter(r => r.team === "Demon")
     };
-
     const towns = data.roles.filter(r => r.team === "Townsfolk").map(r => r.name).sort();
     const outsiders = data.roles.filter(r => r.team === "Outsider").map(r => r.name).sort();
     const minions = data.roles.filter(r => r.team === "Minion").map(r => r.name).sort();
     const bluffableRoles = [...towns, ...outsiders]; 
-    
     const teamOrder = ["Townsfolk", "Outsider", "Minion", "Demon"];
-
     formElement.innerHTML = teamOrder.map(team => `
       <fieldset data-team-type="${team}">
         <legend>${team} <span class="role-current-count"></span></legend>
@@ -68,14 +44,10 @@ export function renderRoleForm(formElement, data) {
                     `;
                     break;
             }
-            
             const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Unassigned —</option></select>`;
-            
-            // NEW: Add a checkbox for the Drunk, but only for Townsfolk
             const drunkCheckboxHtml = (r.team === 'Townsfolk')
                 ? `<label class="drunk-label"><input type="checkbox" class="drunk-checkbox" data-role-name="${r.name}"> Is Drunk</label>`
                 : '';
-
             const controlsHtml = `
                 <div class="role-controls" style="display: none;">
                     ${playerAssignHtml}
@@ -83,7 +55,6 @@ export function renderRoleForm(formElement, data) {
                     ${presetHtml}
                 </div>
             `;
-            
             return `
                 <div class="role-item">
                     <label>
@@ -94,14 +65,12 @@ export function renderRoleForm(formElement, data) {
         }).join("")}
       </fieldset>
     `).join("");
-
     const impCheckbox = formElement.querySelector(`input[value="Imp"]`);
     if (impCheckbox) {
         impCheckbox.checked = true;
         impCheckbox.disabled = true;
         impCheckbox.parentElement.style.cssText = "cursor: not-allowed; opacity: 0.6;";
     }
-
     qsa('input[name="role"]', formElement).forEach(checkbox => {
         const controls = checkbox.closest('.role-item').querySelector('.role-controls');
         const toggleControls = show => {
@@ -110,22 +79,18 @@ export function renderRoleForm(formElement, data) {
         toggleControls(checkbox.checked);
         checkbox.addEventListener('change', e => toggleControls(e.target.checked));
     });
-    
     updateLegendCounts(0); 
 }
 
 /** Updates the role selection fieldset legends with the required number of roles. */
 export function updateLegendCounts(playerCount) {
     const countsData = characterCountsData[Math.min(playerCount, 15)];
-    
     qsa('fieldset[data-team-type]').forEach(fieldset => {
         const team = fieldset.dataset.teamType;
         const teamKey = team === 'Townsfolk' ? 'Townsfolk' : `${team}s`;
         const countSpan = fieldset.querySelector('.role-current-count');
-        
         if (countSpan) {
             countSpan.dataset.teamType = team;
-
             if (playerCount < 5) {
                 countSpan.textContent = '(Min 5 players)';
                 countSpan.style.color = 'var(--muted)';
@@ -142,24 +107,56 @@ export function updateLegendCounts(playerCount) {
 }
 
 
-export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set()) {
+// MODIFIED: Signature updated to accept the poisoned role and both ravenkeeper flags
+export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set(), poisonedRoleForNight = null, playerPool, ravenkeeperIsActivated, ravenkeeperAbilityUsed) {
     listElement.innerHTML = "";
-    steps.forEach((step, idx) => {
-        if (!step.role || rolesInPlay.includes(step.role)) {
-            const li = document.createElement("li");
 
-            // NEW: Check if this role is the drunk one and create the emoji indicator
+    const roleToPlayer = new Map();
+    playerPool.forEach((player, name) => {
+        if (player.assignedRole) {
+            roleToPlayer.set(player.assignedRole, player);
+        }
+    });
+
+    steps.forEach((step, idx) => {
+        const roleIsInPlay = !step.role || rolesInPlay.includes(step.role);
+
+        if (roleIsInPlay) {
+            if (step.role === 'Ravenkeeper' && !ravenkeeperIsActivated) {
+                return; 
+            }
+
+            const li = document.createElement("li");
             const isDrunk = step.role && drunkRoles.has(step.role);
             const drunkIndicator = isDrunk ? '🍺 ' : '';
+
+            // ADDED: Logic for the poison indicator
+            const isPoisoned = step.role && step.role === poisonedRoleForNight;
+            const poisonIndicator = isPoisoned ? '🧪 ' : '';
+
+            const assignedPlayer = roleToPlayer.get(step.role);
+            if (assignedPlayer && !assignedPlayer.isAlive) {
+                // NEW LOGIC: A dead player's step is disabled, UNLESS
+                // it's the Ravenkeeper and their ability hasn't been used yet.
+                if (step.role === 'Ravenkeeper' && !ravenkeeperAbilityUsed) {
+                    // Is dead, but ability is fresh. Allow one click.
+                } else {
+                    li.classList.add('dead-player-step');
+                }
+            }
+            
+            if (step.role) {
+                li.dataset.role = step.role;
+            }
 
             let roleDisplay = step.role;
             if (step.role && playerNames.has(step.role)) {
                 roleDisplay = `${step.role} (${playerNames.get(step.role)})`;
             }
 
-            // MODIFIED: Prepend the emoji indicator to the line
+            // MODIFIED: Prepend the poison indicator to the output
             li.innerHTML = (step.role && step.ask) 
-                ? `${drunkIndicator}<strong>${roleDisplay}:</strong> ${step.ask}` 
+                ? `${poisonIndicator}${drunkIndicator}<strong>${roleDisplay}:</strong> ${step.ask}` 
                 : (step.text || step.role);
                 
             li.dataset.stepKey = `${listId}:${idx}`;
@@ -169,29 +166,25 @@ export function renderList(listElement, listId, steps, rolesInPlay, playerNames,
     });
 }
 
+// ... (Rest of the ui.js file is unchanged)
 /** Renders the main display (token, number, etc.) on the fullscreen text card. */
 export function renderValueDisplay(step, value) {
     const fig = qs("#textCardFigure");
     const img = qs("#textCardTokenImg");
     const cap = qs("#textCardTokenCaption");
-
     const oldMultiContainer = fig.querySelector('.multi-image-container');
     if (oldMultiContainer) oldMultiContainer.remove();
-    
     img.style.display = 'block';
     img.removeAttribute("src");
     img.onerror = null;
     cap.innerHTML = "";
     fig.hidden = true;
-    
     if (step.id === 'demon_bluffs' && Array.isArray(value) && value.some(v => v)) {
         fig.hidden = false;
         cap.innerHTML = '';
         img.style.display = 'none';
-
         const multiImageContainer = document.createElement('div');
         multiImageContainer.className = 'multi-image-container';
-
         value.forEach(bluff => {
             if (bluff) {
                 const bluffFigure = document.createElement('figure');
@@ -199,44 +192,34 @@ export function renderValueDisplay(step, value) {
                 bluffImg.src = cardUrlFor(bluff);
                 bluffImg.alt = `${bluff} token`;
                 bluffImg.onerror = () => bluffFigure.remove();
-
                 const bluffCaption = document.createElement('figcaption');
                 bluffCaption.textContent = bluff;
-
                 bluffFigure.appendChild(bluffImg);
                 bluffFigure.appendChild(bluffCaption);
                 multiImageContainer.appendChild(bluffFigure);
             }
         });
-        
         fig.insertBefore(multiImageContainer, cap);
-
     } else if (step.id === 'evil_team_info' && typeof value === 'object' && value !== null) {
         const allEvil = [...(value.demons || []), ...(value.minions || [])];
-
         if (allEvil.length > 0) {
             fig.hidden = false;
             cap.innerHTML = '';
             img.style.display = 'none';
-
             const multiImageContainer = document.createElement('div');
             multiImageContainer.className = 'multi-image-container';
-
             allEvil.forEach(player => {
                 const playerFigure = document.createElement('figure');
                 const playerImg = document.createElement('img');
                 playerImg.src = cardUrlFor(player.role);
                 playerImg.alt = `${player.role} token`;
                 playerImg.onerror = () => playerFigure.remove();
-
                 const playerCaption = document.createElement('figcaption');
                 playerCaption.innerHTML = `<span class="player-name">${player.name}</span><span class="player-role">(${player.role})</span>`;
-
                 playerFigure.appendChild(playerImg);
                 playerFigure.appendChild(playerCaption);
                 multiImageContainer.appendChild(playerFigure);
             });
-            
             fig.insertBefore(multiImageContainer, cap);
         }
     } else if (step.role === "Poisoner") {

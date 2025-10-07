@@ -3,6 +3,7 @@
 
 import * as utils from './utils.js';
 import * as ui from './ui.js';
+import * as playerStatusUI from './player-status.js';
 import { updateCharacterCountDisplay } from './character-counts.js';
 
 // --- App State ---
@@ -10,7 +11,9 @@ let DATA = null;
 let RNG = null;
 const STEP_STATE = new Map();
 let POISONED_ROLE_FOR_NIGHT = null;
-let PLAYER_POOL = new Map(); // Using a Map to store players and their assigned roles
+let PLAYER_POOL = new Map();
+let RAVENKEEPER_IS_ACTIVATED = false; 
+let RAVENKEEPER_ABILITY_USED = false; // NEW: Tracks if the ability card has been shown
 
 // --- DOM Element References ---
 const DOMElements = {
@@ -27,7 +30,7 @@ const DOMElements = {
     pickerCancel: utils.qs("#pickerCancel"),
     pickerSearch: utils.qs("#pickerSearch"),
     selfKillBtn: utils.qs("#selfKillBtn"),
-    noOutsiderBtn: utils.qs("#noOutsiderBtn"), // <-- NEW
+    noOutsiderBtn: utils.qs("#noOutsiderBtn"),
     playerCountInput: utils.qs("#player-count-input"),
     playerPoolInput: utils.qs("#player-pool-input"),
     addPlayersBtn: utils.qs("#addPlayersBtn"),
@@ -50,11 +53,16 @@ async function initialize() {
 function attachEventListeners() {
     DOMElements.generateBtn.addEventListener("click", onGenerate);
     DOMElements.resetBtn.addEventListener("click", resetAll);
-    DOMElements.textCardCloseBtn.addEventListener("click", () => ui.openTextCard(false));
+    DOMElements.textCardCloseBtn.addEventListener("click", () => {
+        ui.openTextCard(false);
+        // After closing any card, re-render the lists.
+        // This ensures the Ravenkeeper step becomes disabled immediately after use.
+        renderNightLists();
+    });
     DOMElements.poisonToggle.addEventListener("change", onPoisonToggle);
     DOMElements.pickBtn.addEventListener("click", onPick);
     DOMElements.selfKillBtn.addEventListener("click", onSelfKill);
-    DOMElements.noOutsiderBtn.addEventListener("click", onNoOutsider); // <-- NEW
+    DOMElements.noOutsiderBtn.addEventListener("click", onNoOutsider);
     DOMElements.pickerCancel.addEventListener("click", () => ui.openPicker(false));
     DOMElements.pickerSearch.addEventListener("input", filterPicker);
 
@@ -74,6 +82,7 @@ function attachEventListeners() {
         if (e.key === "Escape") {
             ui.openTextCard(false);
             ui.openPicker(false);
+            renderNightLists(); // Also re-render on escape
         }
     });
 
@@ -92,16 +101,23 @@ function onAddPlayers() {
         .map(name => name.trim())
         .filter(name => name && !PLAYER_POOL.has(name));
     
-    names.forEach(name => PLAYER_POOL.set(name, { assignedRole: null, isDrunk: false }));
+    names.forEach(name => PLAYER_POOL.set(name, { 
+        assignedRole: null, 
+        isDrunk: false, 
+        isAlive: true 
+    }));
 
     DOMElements.playerPoolInput.value = '';
-    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL);
     updateAllRoleDropdowns();
 }
 
 function onPlayerTagClick(event) {
-    if (event.target.classList.contains('remove-player-btn')) {
-        const playerName = event.target.dataset.name;
+    const removeBtn = event.target.closest('.remove-player-btn');
+    const playerTag = event.target.closest('.player-tag');
+
+    if (removeBtn) {
+        const playerName = removeBtn.dataset.name;
         const player = PLAYER_POOL.get(playerName);
 
         if (player && player.assignedRole) {
@@ -110,9 +126,17 @@ function onPlayerTagClick(event) {
         }
 
         PLAYER_POOL.delete(playerName);
-        ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
         updateAllRoleDropdowns();
+
+    } else if (playerTag) {
+        const playerName = playerTag.dataset.name;
+        const player = PLAYER_POOL.get(playerName);
+        if (player) {
+            player.isAlive = !player.isAlive;
+            renderNightLists();
+        }
     }
+    playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL);
 }
 
 function onRoleAssign(event) {
@@ -123,9 +147,7 @@ function onRoleAssign(event) {
     const selectedPlayerName = target.value;
 
     PLAYER_POOL.forEach(p => {
-        if (p.assignedRole === roleName) {
-            p.assignedRole = null;
-        }
+        if (p.assignedRole === roleName) p.assignedRole = null;
     });
 
     if (selectedPlayerName) {
@@ -140,8 +162,7 @@ function onRoleAssign(event) {
     }
     
     onDrunkCheck({ target: utils.qs('.drunk-checkbox') || document.body });
-
-    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL);
     updateAllRoleDropdowns();
 }
 
@@ -154,9 +175,7 @@ function onDrunkCheck(event) {
             });
         }
     }
-
     PLAYER_POOL.forEach(player => player.isDrunk = false);
-
     const checkedDrunkBox = utils.qs('.drunk-checkbox:checked');
     if (checkedDrunkBox) {
         const drunkRoleName = checkedDrunkBox.dataset.roleName;
@@ -173,22 +192,21 @@ function onGenerate() {
     RNG = utils.mulberry32(utils.newSeed());
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
-    const roles = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
-    const names = readPlayerNames();
-    const drunkRoles = new Set();
-    PLAYER_POOL.forEach(player => {
-        if (player.isDrunk && player.assignedRole) {
-            drunkRoles.add(player.assignedRole);
-        }
-    });
-
-    ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep, drunkRoles);
-    ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep, drunkRoles);
+    RAVENKEEPER_IS_ACTIVATED = false;
+    RAVENKEEPER_ABILITY_USED = false; // Reset on new game
+    renderNightLists();
 }
 
 function openStep(listId, index, step, clickedLi) {
+    if (clickedLi.classList.contains('dead-player-step')) return;
+
     utils.qsa("li.active").forEach(li => li.classList.remove("active"));
     clickedLi.classList.add("active");
+
+    // NEW: If this is the one-time Ravenkeeper action, set the flag
+    if (step.role === 'Ravenkeeper') {
+        RAVENKEEPER_ABILITY_USED = true;
+    }
 
     const key = `${listId}:${index}`;
     DOMElements.textCard.dataset.key = key;
@@ -208,12 +226,13 @@ function openStep(listId, index, step, clickedLi) {
     DOMElements.poisonToggle.checked = state.isPoisoned;
     DOMElements.textCardText.textContent = step.ask || "";
     
-    // --- Button Visibility Logic ---
-    DOMElements.pickBtn.style.display = (step.revealType || step.role === "Poisoner") ? 'inline-block' : 'none';
     const isImpKillStep = step.role === 'Imp' && listId.startsWith('eachNight');
+    const isLibrarianStep = step.role === 'Librarian';
+    
+    const showPickButton = step.revealType || step.role === "Poisoner" || isImpKillStep;
+    DOMElements.pickBtn.style.display = showPickButton ? 'inline-block' : 'none';
     DOMElements.selfKillBtn.style.display = isImpKillStep ? 'inline-block' : 'none';
-    const isLibrarianStep = step.role === 'Librarian'; // MODIFIED: Check for Librarian step
-    DOMElements.noOutsiderBtn.style.display = isLibrarianStep ? 'inline-block' : 'none'; // MODIFIED: Show button if Librarian
+    DOMElements.noOutsiderBtn.style.display = isLibrarianStep ? 'inline-block' : 'none';
 
     ui.renderValueDisplay(step, value);
     ui.openTextCard(true);
@@ -228,18 +247,11 @@ function onSelfKill() {
     DOMElements.noOutsiderBtn.style.display = 'none';
 }
 
-// NEW: Handles the Librarian's special button click
 function onNoOutsider() {
     const key = DOMElements.textCard.dataset.key; if (!key) return;
     const { step } = getStepInfo(key);
-
-    // Directly render the "0" display.
     ui.renderValueDisplay(step, "0");
-
-    // Confirm the action in the main text area.
     DOMElements.textCardText.textContent = "There are no outsiders in play";
-
-    // Hide the choice buttons to prevent further action.
     DOMElements.pickBtn.style.display = 'none';
     DOMElements.noOutsiderBtn.style.display = 'none';
 }
@@ -254,10 +266,35 @@ function onPoisonToggle() {
 
 function onPick() {
     const key = DOMElements.textCard.dataset.key; if (!key) return;
-    const { step, state } = getStepInfo(key);
+    const { step, listId } = getStepInfo(key);
     const playerNames = readPlayerNames();
 
-    if (step.role === "Poisoner") {
+    if (step.role === 'Imp' && listId.startsWith('eachNight')) {
+        const livingPlayers = Array.from(PLAYER_POOL.entries())
+            .filter(([, player]) => player.isAlive)
+            .map(([name]) => name);
+
+        ui.buildPicker(livingPlayers);
+        utils.qs("#pickerTitle").textContent = "Select a Kill Target";
+        utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => {
+            const killedPlayerName = item.dataset.value;
+            const player = PLAYER_POOL.get(killedPlayerName);
+            if (player) {
+                player.isAlive = false;
+
+                if (player.assignedRole === 'Ravenkeeper') {
+                    RAVENKEEPER_IS_ACTIVATED = true;
+                }
+            }
+            
+            DOMElements.textCardText.textContent = `You have chosen to kill ${killedPlayerName} (${player?.assignedRole || 'Role?'}).`;
+            DOMElements.pickBtn.style.display = 'none';
+            playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL);
+            renderNightLists(); 
+            ui.openPicker(false);
+        }));
+
+    } else if (step.role === "Poisoner") {
         const rolesInPlay = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
         const targets = rolesInPlay.filter(r => DATA.roles.find(d => d.name === r)?.team.match(/Townsfolk|Outsider/));
         ui.buildPicker(targets, playerNames);
@@ -269,16 +306,20 @@ function onPick() {
             DOMElements.pickBtn.style.display = 'none';
             DOMElements.noOutsiderBtn.style.display = 'none';
             ui.openPicker(false);
+            renderNightLists(); // ADDED: Re-render lists to show the new poison indicator
         }));
-    } else if (state.revealType === "token") {
-        const poolName = step.randomPolicy?.pool || teamForRole(step.role) || "Any";
-        let pool = poolFor(poolName).filter(r => r !== step.role);
-        ui.buildPicker(pool, playerNames);
-        utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => handlePickChoice(item.dataset.value)));
-    } else if (state.revealType === "numeric" || state.revealType === "boolean") {
-        const opts = state.revealType === "numeric" ? (step.randomPolicy?.values ?? [0, 1, 2, "≥3"]) : ["Yes", "No"];
-        ui.buildPicker(opts);
-        utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => handlePickChoice(item.dataset.value)));
+    } else { 
+        const state = ensureState(key, step);
+        if (state.revealType === "token") {
+            const poolName = step.randomPolicy?.pool || teamForRole(step.role) || "Any";
+            let pool = poolFor(poolName).filter(r => r !== step.role);
+            ui.buildPicker(pool, playerNames);
+            utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => handlePickChoice(item.dataset.value)));
+        } else if (state.revealType === "numeric" || state.revealType === "boolean") {
+            const opts = state.revealType === "numeric" ? (step.randomPolicy?.values ?? [0, 1, 2, "≥3"]) : ["Yes", "No"];
+            ui.buildPicker(opts);
+            utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => handlePickChoice(item.dataset.value)));
+        }
     }
     ui.openPicker(true);
 }
@@ -305,13 +346,16 @@ function resetAll() {
     
     STEP_STATE.clear();
     POISONED_ROLE_FOR_NIGHT = null;
+    RAVENKEEPER_IS_ACTIVATED = false;
+    RAVENKEEPER_ABILITY_USED = false; // Reset on new game
     
     PLAYER_POOL.forEach(player => {
         player.assignedRole = null;
         player.isDrunk = false;
+        player.isAlive = true;
     });
 
-    ui.renderPlayerPool(DOMElements.playerPoolDisplay, PLAYER_POOL);
+    playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL);
     updateAllRoleDropdowns();
     updateCharacterCountDisplay(0);
     ui.updateLegendCounts(0);
@@ -320,6 +364,21 @@ function resetAll() {
 
 // --- State and Logic Helpers ---
 
+function renderNightLists() {
+    const roles = utils.qsa('input[name="role"]:checked').map(cb => cb.value);
+    const names = readPlayerNames();
+    const drunkRoles = new Set();
+    PLAYER_POOL.forEach(player => {
+        if (player.isDrunk && player.assignedRole) {
+            drunkRoles.add(player.assignedRole);
+        }
+    });
+    // MODIFIED: Pass POISONED_ROLE_FOR_NIGHT to the renderList function
+    ui.renderList(DOMElements.firstNightList, "firstNightList", DATA.firstNight, roles, names, openStep, drunkRoles, POISONED_ROLE_FOR_NIGHT, PLAYER_POOL, RAVENKEEPER_IS_ACTIVATED, RAVENKEEPER_ABILITY_USED);
+    ui.renderList(DOMElements.eachNightList, "eachNightList", DATA.eachNight, roles, names, openStep, drunkRoles, POISONED_ROLE_FOR_NIGHT, PLAYER_POOL, RAVENKEEPER_IS_ACTIVATED, RAVENKEEPER_ABILITY_USED);
+}
+
+// ... (Rest of the helper functions are unchanged)
 function isRoleDrunk(roleName) {
     if (!roleName) return false;
     for (const player of PLAYER_POOL.values()) {
@@ -332,18 +391,15 @@ function isRoleDrunk(roleName) {
 
 function updateAllRoleDropdowns() {
     const allSelects = utils.qsa('select.player-assign-select', DOMElements.roleForm);
-
     allSelects.forEach(select => {
         const currentlySelectedPlayer = select.value;
         let optionsHtml = '<option value="">— Unassigned —</option>';
-
         PLAYER_POOL.forEach((player, name) => {
             const isAvailable = !player.assignedRole || name === currentlySelectedPlayer;
             if (isAvailable) {
                 optionsHtml += `<option value="${name}">${name}</option>`;
             }
         });
-
         select.innerHTML = optionsHtml;
         select.value = currentlySelectedPlayer;
     });
@@ -353,7 +409,7 @@ function getStepInfo(key) {
     const [listId, idx] = key.split(":");
     const step = (listId === "firstNightList" ? DATA.firstNight : DATA.eachNight)[+idx];
     const state = ensureState(key, step);
-    return { step, state };
+    return { step, state, listId, idx };
 }
 
 function ensureState(key, step) {
@@ -435,28 +491,23 @@ function buildInfoList(stepId, isPoisoned = false) {
     const playerNames = readPlayerNames();
     const minions = [];
     const demons = [];
-
     rolesInPlay.forEach(roleName => {
         const team = teamForRole(roleName);
         const name = playerNames.get(roleName) || roleName;
-
         if (team === 'Minion') minions.push({name: name, role: roleName});
         if (team === 'Demon') demons.push({name: name, role: roleName});
     });
-
     let displayDemons = [...demons];
     if (isPoisoned && minions.length > 0) {
         const fakeDemon = utils.randChoice(minions, RNG);
         displayDemons.push(fakeDemon);
     }
-    
     if (stepId === 'evil_team_info') {
         return {
             demons: displayDemons,
             minions: minions
         };
     }
-
     return null;
 }
 
