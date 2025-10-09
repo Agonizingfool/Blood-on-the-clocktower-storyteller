@@ -240,17 +240,25 @@ export function buildPicker(options, playerNames = new Map(), playerPool = new M
     });
 }
 
-// ... (keep openTextCard, openPicker, and toggleFullscreen as they are) ...
 export function openTextCard(show) {
     const card = qs("#textCard");
     card.classList.toggle("show", show);
     card.setAttribute("aria-hidden", String(!show));
+    
+    // Add these two lines
+    if (show) document.body.classList.add('modal-open');
+    else document.body.classList.remove('modal-open');
 }
 
 export function openPicker(show) {
     const picker = qs("#picker");
     picker.classList.toggle("show", show);
     picker.setAttribute("aria-hidden", String(!show));
+
+    // Add these two lines
+    if (show) document.body.classList.add('modal-open');
+    else document.body.classList.remove('modal-open');
+
     if (!show) {
         qs("#pickerList").innerHTML = "";
         qs("#pickerTitle").textContent = "Pick a role";
