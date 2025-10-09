@@ -1,15 +1,15 @@
 // ===== player-status.js =====
 // Handles rendering of UI components related to player alive/dead status.
 
-// ADDED: Import the cardUrlFor utility to get token image paths
 import { cardUrlFor } from './utils.js';
 
 /**
  * Renders the list of players in the Player Pool card, with status indicators.
  * @param {HTMLElement} container - The element to render the list into.
  * @param {Map<string, object>} playerPool - The map of player data.
+ * @param {string|null} [monkProtectedPlayer=null] - The name of the player protected by the Monk.
  */
-export function renderPlayerManager(container, playerPool) {
+export function renderPlayerManager(container, playerPool, monkProtectedPlayer = null) {
     container.innerHTML = ''; // Clear existing tags
     if (!playerPool || playerPool.size === 0) return;
 
@@ -23,14 +23,16 @@ export function renderPlayerManager(container, playerPool) {
             tag.classList.add('dead');
         }
 
-        let content = `<span>${player.isAlive ? '' : '☠️ '}${name}</span>`;
-        
-        // MODIFIED: Instead of text, add an image tag for the assigned role token.
+        // Add indicators for Drunk, Dead, and Protected status
+        const protectedIndicator = monkProtectedPlayer === name ? '✝️ ' : '';
+        const drunkIndicator = player.isDrunk ? '🍺 ' : '';
+        const deadIndicator = player.isAlive ? '' : '☠️ ';
+        let content = `<span>${protectedIndicator}${drunkIndicator}${deadIndicator}${name}</span>`;
+
         if (player.assignedRole) {
             content += `<img src="${cardUrlFor(player.assignedRole)}" class="assigned-role-token" alt="${player.assignedRole}" title="${player.assignedRole}">`;
         }
-        
-        // The remove button is kept separate from the toggle logic
+
         content += `<button class="remove-player-btn" data-name="${name}" title="Remove ${name}">×</button>`;
         tag.innerHTML = content;
         container.appendChild(tag);

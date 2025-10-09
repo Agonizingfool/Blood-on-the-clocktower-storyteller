@@ -4,65 +4,52 @@
 import { qs, qsa, cardUrlFor } from './utils.js';
 import { characterCountsData } from './character-counts.js';
 
-/** Renders the initial role selection form. */
+// ... (keep renderRoleForm and updateLegendCounts as they are) ...
 export function renderRoleForm(formElement, data) {
-    // ... (no changes in this function)
     const byTeam = {
         Townsfolk: data.roles.filter(r => r.team === "Townsfolk"),
-        Outsider:  data.roles.filter(r => r.team === "Outsider"),
-        Minion:    data.roles.filter(r => r.team === "Minion"),
-        Demon:     data.roles.filter(r => r.team === "Demon")
+        Outsider: data.roles.filter(r => r.team === "Outsider"),
+        Minion: data.roles.filter(r => r.team === "Minion"),
+        Demon: data.roles.filter(r => r.team === "Demon")
     };
     const towns = data.roles.filter(r => r.team === "Townsfolk").map(r => r.name).sort();
     const outsiders = data.roles.filter(r => r.team === "Outsider").map(r => r.name).sort();
     const minions = data.roles.filter(r => r.team === "Minion").map(r => r.name).sort();
-    const bluffableRoles = [...towns, ...outsiders]; 
+    const bluffableRoles = [...towns, ...outsiders];
     const teamOrder = ["Townsfolk", "Outsider", "Minion", "Demon"];
     formElement.innerHTML = teamOrder.map(team => `
       <fieldset data-team-type="${team}">
         <legend>${team} <span class="role-current-count"></span></legend>
         ${byTeam[team].map(r => {
-            let presetHtml = '';
-            switch(r.name) {
-                case "Washerwoman":
-                    presetHtml = `<select id="presetWasherwomanRole" class="role-preset-select"><option value="">— select —</option>${towns.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
-                    break;
-                case "Librarian":
-                    presetHtml = `<select id="presetLibrarianRole" class="role-preset-select"><option value="">No Outsider in play</option>${outsiders.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
-                    break;
-                case "Investigator":
-                    presetHtml = `<select id="presetInvestigatorRole" class="role-preset-select"><option value="">— select —</option>${minions.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
-                    break;
-                case "Chef":
-                    presetHtml = `<input type="number" id="presetChefNumber" class="role-preset-select" min="0" placeholder="#">`;
-                    break;
-                case "Imp":
-                    presetHtml = `
+        let presetHtml = '';
+        switch (r.name) {
+            case "Washerwoman":
+                presetHtml = `<select id="presetWasherwomanRole" class="role-preset-select"><option value="">— select —</option>${towns.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
+                break;
+            case "Librarian":
+                presetHtml = `<select id="presetLibrarianRole" class="role-preset-select"><option value="">No Outsider in play</option>${outsiders.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
+                break;
+            case "Investigator":
+                presetHtml = `<select id="presetInvestigatorRole" class="role-preset-select"><option value="">— select —</option>${minions.filter(opt => opt !== r.name).map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
+                break;
+            case "Chef":
+                presetHtml = `<input type="number" id="presetChefNumber" class="role-preset-select" min="0" placeholder="#">`;
+                break;
+            case "Imp":
+                presetHtml = `
                         <select id="presetDemonBluff1" class="role-preset-select"><option value="">— bluff 1 —</option>${bluffableRoles.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
                         <select id="presetDemonBluff2" class="role-preset-select"><option value="">— bluff 2 —</option>${bluffableRoles.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
                         <select id="presetDemonBluff3" class="role-preset-select"><option value="">— bluff 3 —</option>${bluffableRoles.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>
                     `;
-                    break;
-            }
-            const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Unassigned —</option></select>`;
-            const drunkCheckboxHtml = (r.team === 'Townsfolk')
-                ? `<label class="drunk-label"><input type="checkbox" class="drunk-checkbox" data-role-name="${r.name}"> Is Drunk</label>`
-                : '';
-            const controlsHtml = `
-                <div class="role-controls" style="display: none;">
-                    ${playerAssignHtml}
-                    ${drunkCheckboxHtml}
-                    ${presetHtml}
-                </div>
-            `;
-            return `
-                <div class="role-item">
-                    <label>
-                        <input type="checkbox" name="role" value="${r.name}"> ${r.name}
-                    </label>
-                    ${controlsHtml}
-                </div>`;
-        }).join("")}
+                break;
+            case "Drunk":
+                presetHtml = `<select id="drunkFakeRoleSelect" class="role-preset-select"><option value="">— is which Townsfolk? —</option>${towns.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
+                break;
+        }
+        const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Unassigned —</option></select>`;
+        const controlsHtml = `<div class="role-controls" style="display: none;">${playerAssignHtml}${presetHtml}</div>`;
+        return `<div class="role-item"><label><input type="checkbox" name="role" value="${r.name}"> ${r.name}</label>${controlsHtml}</div>`;
+    }).join("")}
       </fieldset>
     `).join("");
     const impCheckbox = formElement.querySelector(`input[value="Imp"]`);
@@ -73,16 +60,13 @@ export function renderRoleForm(formElement, data) {
     }
     qsa('input[name="role"]', formElement).forEach(checkbox => {
         const controls = checkbox.closest('.role-item').querySelector('.role-controls');
-        const toggleControls = show => {
-            if (controls) controls.style.display = show ? 'flex' : 'none';
-        };
+        const toggleControls = show => { if (controls) controls.style.display = show ? 'flex' : 'none'; };
         toggleControls(checkbox.checked);
         checkbox.addEventListener('change', e => toggleControls(e.target.checked));
     });
-    updateLegendCounts(0); 
+    updateLegendCounts(0);
 }
 
-/** Updates the role selection fieldset legends with the required number of roles. */
 export function updateLegendCounts(playerCount) {
     const countsData = characterCountsData[Math.min(playerCount, 15)];
     qsa('fieldset[data-team-type]').forEach(fieldset => {
@@ -97,68 +81,43 @@ export function updateLegendCounts(playerCount) {
             } else if (countsData && countsData[teamKey] !== undefined) {
                 const count = countsData[teamKey];
                 countSpan.textContent = `(${count} required)`;
-                countSpan.style.color = ''; 
+                countSpan.style.color = '';
             } else {
-                 countSpan.textContent = '';
-                 countSpan.style.color = '';
+                countSpan.textContent = '';
+                countSpan.style.color = '';
             }
         }
     });
 }
 
-
-// MODIFIED: Signature updated to accept the poisoned role and both ravenkeeper flags
-export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set(), poisonedRoleForNight = null, playerPool, ravenkeeperIsActivated, ravenkeeperAbilityUsed) {
+export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set(), poisonedRoleForNight = null, playerPool, ravenkeeperIsActivated, ravenkeeperAbilityUsed, undertakerCanAct = false) {
     listElement.innerHTML = "";
-
     const roleToPlayer = new Map();
-    playerPool.forEach((player, name) => {
-        if (player.assignedRole) {
-            roleToPlayer.set(player.assignedRole, player);
-        }
-    });
-
+    playerPool.forEach((player, name) => { if (player.assignedRole) { roleToPlayer.set(player.assignedRole, player); } });
     steps.forEach((step, idx) => {
-        const roleIsInPlay = !step.role || rolesInPlay.includes(step.role);
+        if (step.role === 'Undertaker' && !undertakerCanAct) {
+            return;
+        }
 
+        const roleIsInPlay = !step.role || rolesInPlay.includes(step.role) || drunkRoles.has(step.role);
         if (roleIsInPlay) {
-            if (step.role === 'Ravenkeeper' && !ravenkeeperIsActivated) {
-                return; 
-            }
-
+            if (step.role === 'Ravenkeeper' && !ravenkeeperIsActivated) { return; }
             const li = document.createElement("li");
             const isDrunk = step.role && drunkRoles.has(step.role);
             const drunkIndicator = isDrunk ? '🍺 ' : '';
-
-            // ADDED: Logic for the poison indicator
             const isPoisoned = step.role && step.role === poisonedRoleForNight;
             const poisonIndicator = isPoisoned ? '🧪 ' : '';
-
-            const assignedPlayer = roleToPlayer.get(step.role);
+            let assignedPlayer;
+            if (isDrunk) {
+                for (const p of playerPool.values()) { if (p.isDrunk && p.fakeRole === step.role) { assignedPlayer = p; break; } }
+            } else { assignedPlayer = roleToPlayer.get(step.role); }
             if (assignedPlayer && !assignedPlayer.isAlive) {
-                // NEW LOGIC: A dead player's step is disabled, UNLESS
-                // it's the Ravenkeeper and their ability hasn't been used yet.
-                if (step.role === 'Ravenkeeper' && !ravenkeeperAbilityUsed) {
-                    // Is dead, but ability is fresh. Allow one click.
-                } else {
-                    li.classList.add('dead-player-step');
-                }
+                if (step.role === 'Ravenkeeper' && !ravenkeeperAbilityUsed) { } else { li.classList.add('dead-player-step'); }
             }
-            
-            if (step.role) {
-                li.dataset.role = step.role;
-            }
-
+            if (step.role) { li.dataset.role = step.role; }
             let roleDisplay = step.role;
-            if (step.role && playerNames.has(step.role)) {
-                roleDisplay = `${step.role} (${playerNames.get(step.role)})`;
-            }
-
-            // MODIFIED: Prepend the poison indicator to the output
-            li.innerHTML = (step.role && step.ask) 
-                ? `${poisonIndicator}${drunkIndicator}<strong>${roleDisplay}:</strong> ${step.ask}` 
-                : (step.text || step.role);
-                
+            if (step.role && playerNames.has(step.role)) { roleDisplay = `${step.role} (${playerNames.get(step.role)})`; }
+            li.innerHTML = (step.role && step.ask) ? `${poisonIndicator}${drunkIndicator}<strong>${roleDisplay}:</strong> ${step.ask}` : (step.text || step.role);
             li.dataset.stepKey = `${listId}:${idx}`;
             li.addEventListener("click", () => stepClickHandler(listId, idx, step, li));
             listElement.appendChild(li);
@@ -166,8 +125,6 @@ export function renderList(listElement, listId, steps, rolesInPlay, playerNames,
     });
 }
 
-// ... (Rest of the ui.js file is unchanged)
-/** Renders the main display (token, number, etc.) on the fullscreen text card. */
 export function renderValueDisplay(step, value) {
     const fig = qs("#textCardFigure");
     const img = qs("#textCardTokenImg");
@@ -250,9 +207,7 @@ export function renderValueDisplay(step, value) {
     }
 }
 
-
-/** Builds and displays the role/option picker modal. */
-export function buildPicker(options, playerNames = new Map()) {
+export function buildPicker(options, playerNames = new Map(), playerPool = new Map(), poisonedRoleForNight = null, monkProtectedPlayer = null) {
     const list = qs("#pickerList");
     qs("#pickerSearch").value = "";
     list.innerHTML = "";
@@ -260,21 +215,38 @@ export function buildPicker(options, playerNames = new Map()) {
         const div = document.createElement("div");
         div.className = "picker-item";
         div.dataset.value = name;
+        let indicator = '';
+        if (playerPool.size > 0) {
+            const player = playerPool.get(name);
+            if (player) {
+                const isDrunk = player.isDrunk;
+                const isPoisoned = poisonedRoleForNight === player.assignedRole;
+                
+                if (monkProtectedPlayer === name) {
+                    indicator = '✝️ ';
+                }
+
+                if (player.assignedRole === 'Soldier' && !isDrunk && !isPoisoned) {
+                    indicator += '🛡️ ';
+                } else if (player.assignedRole === 'Mayor' && !isDrunk && !isPoisoned) {
+                    indicator += '🏛️ ';
+                }
+            }
+        }
         const playerName = playerNames.get(String(name));
         const displayText = playerName ? `${name} (${playerName})` : name;
-        div.innerHTML = `<span>${displayText}</span><small>Select</small>`;
+        div.innerHTML = `<span>${indicator}${displayText}</span><small>Select</small>`;
         list.appendChild(div);
     });
 }
 
-/** Manages the visibility and state of the fullscreen text card. */
+// ... (keep openTextCard, openPicker, and toggleFullscreen as they are) ...
 export function openTextCard(show) {
     const card = qs("#textCard");
     card.classList.toggle("show", show);
     card.setAttribute("aria-hidden", String(!show));
 }
 
-/** Manages the visibility of the picker modal. */
 export function openPicker(show) {
     const picker = qs("#picker");
     picker.classList.toggle("show", show);
@@ -285,7 +257,6 @@ export function openPicker(show) {
     }
 }
 
-/** Manages the visibility of the main script fullscreen view. */
 export async function toggleFullscreen(enable) {
     const sec = qs("#scriptSection");
     sec.classList.toggle("fullscreen", enable);
@@ -297,9 +268,9 @@ export async function toggleFullscreen(enable) {
             btn.addEventListener("click", () => toggleFullscreen(false));
             document.body.appendChild(btn);
         }
-        try { await document.documentElement.requestFullscreen?.(); } catch {}
+        try { await document.documentElement.requestFullscreen?.(); } catch { }
     } else {
         qs("#exitFullscreenBtn")?.remove();
-        if (document.fullscreenElement) try { await document.exitFullscreen(); } catch {}
+        if (document.fullscreenElement) try { await document.exitFullscreen(); } catch { }
     }
 }

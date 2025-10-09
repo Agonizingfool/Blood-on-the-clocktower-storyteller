@@ -315,6 +315,15 @@ button:active {
   transform: rotate(180deg);
 }
 
+/* NEW: Styles for the execution button */
+#executionBtn {
+    padding: 4px 10px;
+    font-size: 0.8em;
+    font-weight: 600;
+    min-height: 0;
+    margin-left: 10px;
+}
+
 #firstNightList,
 #eachNightList {
   padding-left: 22px;
@@ -997,4 +1006,3 @@ li.activated-tonight {
     padding: 4px 6px;
     font-weight: 700;
 }
-
