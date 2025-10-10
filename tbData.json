@@ -34,7 +34,7 @@
     { "role": "Chef",          "ask": "This is how many pairs of evil neighbours...", "revealType": "numeric", "randomPolicy": { "values": [0,1,2,3] } },
     { "role": "Empath",        "ask": "Your number of evil neighbours...",            "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
     { "role": "Fortune Teller","ask": "👆 Point at 2 players <br> I’ll confirm Demon or not. <br> <br> (beware of the red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
-    { "role": "Butler",        "ask": "👆 Point at your Master for the day <br> <br> You only vote if they vote" },
+    { "role": "Butler",        "ask": "👆 Point at your <br>- Master -<br> for the day <br> <br> You only vote if they vote" },
     { "role": "Spy",           "ask": "Look at the Grimoire" }
   ],
 
