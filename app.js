@@ -266,7 +266,7 @@ function openStep(listId, index, step, clickedLi) {
     const poisonToggleLabel = DOMElements.poisonToggle.parentElement;
     if (poisonToggleLabel) poisonToggleLabel.style.display = roleIsDrunk ? 'none' : 'inline-flex';
     DOMElements.poisonToggle.checked = state.isPoisoned;
-    DOMElements.textCardText.textContent = step.ask || "";
+    DOMElements.textCardText.innerHTML = step.ask || "";
     const isImpKillStep = step.role === 'Imp' && listId.startsWith('eachNight');
     const isLibrarianStep = step.role === 'Librarian';
     // Let the Monk pick a player
@@ -327,7 +327,7 @@ function onPick() {
         utils.qsa(".picker-item").forEach(item => {
             item.addEventListener("click", () => {
                 MONK_PROTECTED_PLAYER = item.dataset.value;
-                DOMElements.textCardText.textContent = `You are protecting ${MONK_PROTECTED_PLAYER} tonight.`;
+                DOMElements.textCardText.textContent = `You are protecting ${MONK_PROTECTED_PLAYER} tonight`;
                 DOMElements.pickBtn.style.display = 'none';
                 ui.openPicker(false);
                 playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL, MONK_PROTECTED_PLAYER);
@@ -342,7 +342,7 @@ function onPick() {
         utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => {
             POISONED_ROLE_FOR_NIGHT = item.dataset.value;
             const targetName = playerNames.get(POISONED_ROLE_FOR_NIGHT) || POISONED_ROLE_FOR_NIGHT;
-            DOMElements.textCardText.textContent = `You have poisoned the ${targetName}.`;
+            DOMElements.textCardText.textContent = `You have poisoned ${targetName}`;
             DOMElements.pickBtn.style.display = 'none';
             DOMElements.noOutsiderBtn.style.display = 'none';
             ui.openPicker(false);
@@ -357,7 +357,7 @@ function onPick() {
             ui.buildPicker(pool, playerNames, PLAYER_POOL, POISONED_ROLE_FOR_NIGHT, MONK_PROTECTED_PLAYER);
             utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => handlePickChoice(item.dataset.value), { once: true }));
         } else if (state.revealType === "numeric" || state.revealType === "boolean") {
-            const opts = state.revealType === "numeric" ? (step.randomPolicy?.values ?? [0, 1, 2, "≥3"]) : ["Yes", "No"];
+            const opts = state.revealType === "numeric" ? (step.randomPolicy?.values ?? [0, 1, 2, 3]) : ["Yes", "No"];
             ui.buildPicker(opts);
             utils.qsa(".picker-item").forEach(item => item.addEventListener("click", () => handlePickChoice(item.dataset.value), { once: true }));
         }
@@ -389,7 +389,7 @@ function handleDemonKill(potentialTargets) {
 
             if (isMonkProtected) {
                 ui.openPicker(false);
-                DOMElements.textCardText.textContent = `✝️ Monk: ${killedPlayerName} is protected and does not die.`;
+                DOMElements.textCardText.textContent = `✝️ Monk: ${killedPlayerName} is protected and does not die`;
                 DOMElements.pickBtn.style.display = 'none';
                 return; 
             }
@@ -407,14 +407,14 @@ function handleDemonKill(potentialTargets) {
                 DOMElements.textCardText.textContent = `🛡️ Soldier: ${killedPlayerName} does not die`;
                 DOMElements.pickBtn.style.display = 'none';
             } else if (isProtectedMayor) {
-                DOMElements.textCardText.textContent = `🏛️ Mayor: ${killedPlayerName} does not die. Choose another player to die.`;
+                DOMElements.textCardText.textContent = `🏛️ Mayor: ${killedPlayerName} does not die. Choose another player to die`;
                 const newTargets = potentialTargets.filter(p => p !== killedPlayerName);
                 handleDemonKill(newTargets);
             } else {
                 ui.openPicker(false);
                 player.isAlive = false;
                 if (player.assignedRole === 'Ravenkeeper') { RAVENKEEPER_IS_ACTIVATED = true; }
-                DOMElements.textCardText.textContent = `You have chosen to kill ${killedPlayerName} (${player.assignedRole || 'Role?'}).`;
+                DOMElements.textCardText.textContent = `You have chosen to kill ${killedPlayerName}`;
                 DOMElements.pickBtn.style.display = 'none';
                 playerStatusUI.renderPlayerManager(DOMElements.playerPoolDisplay, PLAYER_POOL, MONK_PROTECTED_PLAYER);
                 renderNightLists();
@@ -485,7 +485,7 @@ function updateAllRoleDropdowns() {
     const allSelects = utils.qsa('select.player-assign-select', DOMElements.roleForm);
     allSelects.forEach(select => {
         const currentlySelectedPlayer = select.value;
-        let optionsHtml = '<option value="">— Unassigned —</option>';
+        let optionsHtml = '<option value="">— Player Name —</option>';
         PLAYER_POOL.forEach((player, name) => {
             const isAvailable = !player.assignedRole || name === currentlySelectedPlayer;
             if (isAvailable) { optionsHtml += `<option value="${name}">${name}</option>`; }

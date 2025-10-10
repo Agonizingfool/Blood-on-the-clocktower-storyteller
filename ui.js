@@ -46,7 +46,7 @@ export function renderRoleForm(formElement, data) {
                 presetHtml = `<select id="drunkFakeRoleSelect" class="role-preset-select"><option value="">— is which Townsfolk? —</option>${towns.map(opt => `<option value="${opt}">${opt}</option>`).join('')}</select>`;
                 break;
         }
-        const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Unassigned —</option></select>`;
+        const playerAssignHtml = `<select class="player-assign-select" data-role-name="${r.name}"><option value="">— Player Name —</option></select>`;
         const controlsHtml = `<div class="role-controls" style="display: none;">${playerAssignHtml}${presetHtml}</div>`;
         return `<div class="role-item"><label><input type="checkbox" name="role" value="${r.name}"> ${r.name}</label>${controlsHtml}</div>`;
     }).join("")}
@@ -114,10 +114,15 @@ export function renderList(listElement, listId, steps, rolesInPlay, playerNames,
             if (assignedPlayer && !assignedPlayer.isAlive) {
                 if (step.role === 'Ravenkeeper' && !ravenkeeperAbilityUsed) { } else { li.classList.add('dead-player-step'); }
             }
-            if (step.role) { li.dataset.role = step.role; }
+if (step.role) { li.dataset.role = step.role; }
             let roleDisplay = step.role;
-            if (step.role && playerNames.has(step.role)) { roleDisplay = `${step.role} (${playerNames.get(step.role)})`; }
-            li.innerHTML = (step.role && step.ask) ? `${poisonIndicator}${drunkIndicator}<strong>${roleDisplay}:</strong> ${step.ask}` : (step.text || step.role);
+            if (step.role && playerNames.has(step.role)) { roleDisplay = `${step.role} (${playerNames.get(step.role)})`; }            
+            let tokenHtml = '';
+            if (step.role && step.id !== 'demon_bluffs') {
+                tokenHtml = `<img src="${cardUrlFor(step.role)}" class="role-token-inline" alt="${step.role}">`;
+            }
+            const titleText = step.id === 'demon_bluffs' ? 'Bluffs' : roleDisplay;
+            li.innerHTML = (step.role && step.ask) ? `${tokenHtml} ${poisonIndicator}${drunkIndicator} <strong>${titleText}</strong>` : (step.text || step.role);
             li.dataset.stepKey = `${listId}:${idx}`;
             li.addEventListener("click", () => stepClickHandler(listId, idx, step, li));
             listElement.appendChild(li);
@@ -181,7 +186,6 @@ export function renderValueDisplay(step, value) {
         }
     } else if (step.role === "Poisoner") {
         fig.hidden = false;
-        cap.textContent = step.role;
         img.src = cardUrlFor(step.role);
         img.alt = `${step.role} token`;
         img.onerror = () => img.removeAttribute("src");
@@ -190,7 +194,7 @@ export function renderValueDisplay(step, value) {
         if (!tokenToShow || tokenToShow === "0") {
             fig.hidden = false;
             img.style.display = 'none';
-            cap.textContent = "0";
+            cap.textContent = "";
         } else {
             fig.hidden = false;
             cap.textContent = tokenToShow;
@@ -198,6 +202,7 @@ export function renderValueDisplay(step, value) {
             img.alt = `${tokenToShow} token`;
             img.onerror = () => img.removeAttribute("src");
         }
+        
     } else if (step.revealType === "numeric" || step.revealType === "boolean" || step.revealType === "info_list") {
         if (value) {
             fig.hidden = false;
