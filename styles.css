@@ -587,23 +587,19 @@ li.active:hover {
   z-index: 10060;
 }
 
+
+/* ===== Full-screen text card (Ask/Reveal) ===== */
 #textCard {
   position: fixed;
   inset: 0;
-  /* Use a semi-transparent version of your background color for the overlay */
-  background: rgba(37, 29, 56, 0.8);
-  backdrop-filter: blur(4px); /* This adds the stylish "frosted glass" effect */
+  background: var(--bg);
   z-index: 10040;
   display: none;
-  padding: 20px;
-  /* Use flexbox to easily center the content card */
-  display: none;
-  align-items: center;
-  justify-content: center;
+  padding: 20px 14px;
 }
 
 #textCard.show {
-  display: flex;
+  display: grid;
 }
 
 #textCard .inner {
