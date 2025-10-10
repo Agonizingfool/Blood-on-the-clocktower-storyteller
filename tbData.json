@@ -33,7 +33,7 @@
     { "role": "Investigator",  "ask": "One of these 2 players is this Minion...",     "revealType": "token",   "randomPolicy": { "pool": "Minion" } },
     { "role": "Chef",          "ask": "This is how many pairs of evil neighbours...", "revealType": "numeric", "randomPolicy": { "values": [0,1,2,3] } },
     { "role": "Empath",        "ask": "Your number of evil neighbours...",            "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
-    { "role": "Fortune Teller","ask": "👆 Point at 2 players. I’ll confirm Demon or not. <br> <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
+    { "role": "Fortune Teller","ask": "👆 Point at 2 players <br> I’ll confirm Demon or not. <br> <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
     { "role": "Butler",        "ask": "👆 Point at your Master for the day <br> <br> You only vote if they vote" },
     { "role": "Spy",           "ask": "Look at the Grimoire" }
   ],
@@ -46,7 +46,7 @@
     { "role": "Imp",           "ask": "👆 Point at who you want to kill? <br> <br> (self-kill passes Imp to a Minion)" },
     { "role": "Ravenkeeper",   "ask": "Tonight, the demon killed you. Point at a player to learn their role", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Empath",        "ask": "Your number of evil neighbours...", "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
-    { "role": "Fortune Teller","ask": "👆 Point at 2 players. I’ll confirm Demon or not. <br> <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
+    { "role": "Fortune Teller","ask": "👆 Point at 2 players <br> I’ll confirm Demon or not. <br> <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
     { "role": "Butler",        "ask": "👆 Point at your Master" },
     { "role": "Undertaker",    "ask": "This executed player’s role is…", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Spy",           "ask": "Look at the Grimoire" },
