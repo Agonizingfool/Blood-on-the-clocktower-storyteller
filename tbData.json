@@ -33,8 +33,8 @@
     { "role": "Investigator",  "ask": "One of these 2 players is this Minion...",     "revealType": "token",   "randomPolicy": { "pool": "Minion" } },
     { "role": "Chef",          "ask": "This is how many pairs of evil neighbours...", "revealType": "numeric", "randomPolicy": { "values": [0,1,2,3] } },
     { "role": "Empath",        "ask": "Your number of evil neighbours...",            "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
-    { "role": "Fortune Teller","ask": "Point at 2 players. I’ll confirm Demon or not. <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
-    { "role": "Butler",        "ask": "Point at your Master <br> <br> Only vote if they vote" },
+    { "role": "Fortune Teller","ask": "👆 Point at 2 players. I’ll confirm Demon or not. <br> <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
+    { "role": "Butler",        "ask": "👆 Point at your Master <br> <br> Only vote if they vote" },
     { "role": "Spy",           "ask": "Look at the Grimoire" }
   ],
 
@@ -43,11 +43,11 @@
     { "role": "Poisoner",      "ask": "Point at who do you want to poison?" },
     { "role": "Monk",          "ask": "Who do you want to protect tonight?" },
     { "role": "Scarlet Woman", "ask": "The Demon has died. You are now the Imp", "revealType": "token" },
-    { "role": "Imp",           "ask": "Who do you want to kill? <br> (self-kill passes Imp to a Minion)" },
+    { "role": "Imp",           "ask": "Who do you want to kill? <br> <br> (self-kill passes Imp to a Minion)" },
     { "role": "Ravenkeeper",   "ask": "Tonight, the demon killed you. Point at a player to learn their role", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Empath",        "ask": "Your number of evil neighbours...", "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
-    { "role": "Fortune Teller","ask": "Point at 2 players. I’ll confirm Demon or not. <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
-    { "role": "Butler",        "ask": "Point at your Master" },
+    { "role": "Fortune Teller","ask": "👆 Point at 2 players. I’ll confirm Demon or not. <br> <br> (beware of red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
+    { "role": "Butler",        "ask": "👆 Point at your Master" },
     { "role": "Undertaker",    "ask": "This executed player’s role is…", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Spy",           "ask": "Look at the Grimoire" },
     { "text": "Dawn - All eyes open" }
