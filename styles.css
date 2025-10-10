@@ -607,19 +607,22 @@ li.active:hover {
 }
 
 #textCard .inner {
-  /* Give the content a solid card background */
+  /* Card visual styles */
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: var(--shadow);
   padding: 24px;
-  
-  /* Layout settings */
+  max-width: 90vw;
+  max-height: 90vh;
+
+  /* Internal content layout styles (restored) */
   display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  align-items: center;
+  justify-items: center;
   gap: 24px;
   text-align: center;
-  max-width: 90vw; /* Ensure it doesn't get too wide on large screens */
-  max-height: 90vh; /* Prevent it from being too tall on mobile */
 }
 
 #textCard .badge {
