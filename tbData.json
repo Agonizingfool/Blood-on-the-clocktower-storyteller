@@ -26,28 +26,28 @@
 
   "firstNight": [
     { "id": "evil_team_info", "text": "Evil Team Info (if 7+ players)", "ask": "Evil Team 😈", "revealType": "info_list" },
-    { "id": "demon_bluffs", "role": "Imp", "ask": "Your 3 bluffs <br> These are not in play", "revealType": "token" },
-    { "role": "Poisoner",      "ask": "👆 Point at who you want to poison?" },
+    { "id": "demon_bluffs", "role": "Imp", "ask": "Your 3 bluffs <br> They're not in play", "revealType": "token" },
+    { "role": "Poisoner",      "ask": "👆 <br> Who you want to 'poison'?" },
     { "role": "Washerwoman",   "ask": "One of these 2 players is this Townsfolk...",  "revealType": "token",   "randomPolicy": { "pool": "Townsfolk" } },
     { "role": "Librarian",     "ask": "One of these 2 players is this Outsider...", "revealType": "token", "randomPolicy": { "pool": "Outsider", "allowZero": true, "pZero": 0.2 } },
     { "role": "Investigator",  "ask": "One of these 2 players is this Minion...",     "revealType": "token",   "randomPolicy": { "pool": "Minion" } },
     { "role": "Chef",          "ask": "This is how many pairs of evil neighbours...", "revealType": "numeric", "randomPolicy": { "values": [0,1,2,3] } },
     { "role": "Empath",        "ask": "Your number of evil players neighbouring you...",            "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
     { "role": "Fortune Teller","ask": "👆 Point at 2 players <br> I’ll confirm Demon or not. <br> <br> (beware of the red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
-    { "role": "Butler",        "ask": "👆 Point at your <br>- Master -<br> for the day <br> <br> You only vote if they vote" },
+    { "role": "Butler",        "ask": "👆 <br> Who is your 'Master' for the day <br> <br> You only vote if they vote" },
     { "role": "Spy",           "ask": "Look at the Grimoire" }
   ],
 
   "eachNight": [
     { "text": "Dusk - All eyes closed" },
-    { "role": "Poisoner",      "ask": "👆 Point at who you want to poison?" },
-    { "role": "Monk",          "ask": "👆 Point at who you want to <br> protect <br> tonight?" },
+    { "role": "Poisoner",      "ask": "👆 <br> Who you want to 'poison'?" },
+    { "role": "Monk",          "ask": "👆 <br> Who you want to 'protect' tonight?" },
     { "role": "Scarlet Woman", "ask": "The Demon has died <br> You are now the Imp", "revealType": "token" },
-    { "role": "Imp",           "ask": "👆 Point at who you want to kill? <br> <br> (self-kill passes Imp to a Minion)" },
+    { "role": "Imp",           "ask": "👆 <br> Who you want to kill? <br> <br> (self-kill passes Imp to a Minion)" },
     { "role": "Ravenkeeper",   "ask": "Tonight, the demon killed you <br> <br> 👆 Point at a player to know their role", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Empath",        "ask": "Your number of evil players neighbouring you...", "revealType": "numeric", "randomPolicy": { "min": 0, "max": 2 } },
     { "role": "Fortune Teller","ask": "👆 Point at 2 players <br> I’ll confirm Demon or not. <br> <br> (beware of the red herring)", "revealType": "boolean", "randomPolicy": { "pTrue": 0.5 } },
-    { "role": "Butler",        "ask": "👆 Point at your <br>- Master -<br> for the day <br> <br> You only vote if they vote" },
+    { "role": "Butler",        "ask": "👆 <br> Who is your 'Master' for the day <br> <br> You only vote if they vote" },
     { "role": "Undertaker",    "ask": "Today's executed player’s role is…", "revealType": "token", "randomPolicy": { "pool": "Any" } },
     { "role": "Spy",           "ask": "Look at the Grimoire" },
     { "text": "Dawn - All eyes open" }
