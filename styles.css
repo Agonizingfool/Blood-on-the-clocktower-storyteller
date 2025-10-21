@@ -594,21 +594,14 @@ li.active:hover {
   inset: 0;
   z-index: 10040;
   
-  /* New centering layout */
-  display: none; /* <-- CORRECTED: Should be none by default */
+  display: none; 
   align-items: center;
   justify-content: center;
   padding: 20px; /* Padding for small screens */
 
-  /* Your blur suggestion */
   background: var(--bg); /* Fallback dim */
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
-#textCard.show {
-  display: flex; /* Changed from grid */
-}
 
 #textCard .inner {
   /* This is now the visible card */
@@ -839,7 +832,7 @@ li.active:hover {
 
 /* 2. Make the content of the caption (the number or token name) massive, but capped lower */
 #textCardFigure:not([hidden]) #textCardTokenCaption {
-font-size: clamp(1.5rem, 3vw, 2rem);
+font-size: clamp(4rem, 3vw, 2rem);
   font-weight: 900;
   line-height: 1.1;
   margin-top: 0;
@@ -853,7 +846,11 @@ font-size: clamp(1.5rem, 3vw, 2rem);
   background: rgba(0, 0, 0, .72);
   display: none;
   z-index: 10080;
-  padding: 20px; /* <-- ADDED */
+  padding: 20px;
+  
+  /* MOVED from .picker.show */
+  align-items: center;
+  justify-content: center;
 }
 
 .picker.show {
