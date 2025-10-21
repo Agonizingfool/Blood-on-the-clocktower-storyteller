@@ -602,8 +602,7 @@ li.active:hover {
 
   /* Dimming background */
   background: rgba(15, 12, 22, 0.5); /* Fallback dim */
-  /* backdrop-filter: blur(8px); */ /* <-- REMOVED (PRIME BUG SUSPECT) */
-  /* -webkit-backdrop-filter: blur(8px); */ /* <-- REMOVED */
+  backdrop-filter: blur(80px); 
 
   /* NEW visibility rules */
   opacity: 0;
