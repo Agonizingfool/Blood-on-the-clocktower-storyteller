@@ -848,7 +848,7 @@ li.active:hover {
 
 /* 2. Make the content of the caption (the number or token name) massive, but capped lower */
 #textCardFigure:not([hidden]) #textCardTokenCaption {
-font-size: clamp(4rem, 3vw, 2rem);
+font-size: clamp(2rem, 3vw, 2rem);
   font-weight: 900;
   line-height: 1.1;
   margin-top: 0;
