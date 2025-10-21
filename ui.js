@@ -4,6 +4,8 @@
 import { qs, qsa, cardUrlFor } from './utils.js';
 import { characterCountsData } from './character-counts.js';
 
+let savedScrollY = 0; // <-- ADDED: To save scroll position
+
 // ... (keep renderRoleForm and updateLegendCounts as they are) ...
 export function renderRoleForm(formElement, data) {
     const byTeam = {
@@ -255,7 +257,7 @@ export function openTextCard(show) {
     card.classList.toggle("show", show);
     card.setAttribute("aria-hidden", String(!show));
     
-    // Add these two lines
+    // This is all we need
     if (show) document.body.classList.add('modal-open');
     else document.body.classList.remove('modal-open');
 }
@@ -265,7 +267,6 @@ export function openPicker(show) {
     picker.classList.toggle("show", show);
     picker.setAttribute("aria-hidden", String(!show));
 
-    // Add these two lines
     if (show) document.body.classList.add('modal-open');
     else document.body.classList.remove('modal-open');
 
@@ -274,6 +275,7 @@ export function openPicker(show) {
         qs("#pickerTitle").textContent = "Pick a role";
     }
 }
+
 
 export async function toggleFullscreen(enable) {
     const sec = qs("#scriptSection");

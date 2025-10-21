@@ -544,7 +544,7 @@ li.active:hover {
   align-items: center;
   justify-content: center;
   z-index: 10050;
-  padding: 20px;
+  /* padding: 20px; */ /* <-- REMOVED */
 }
 
 #lightbox.show {
@@ -557,6 +557,7 @@ li.active:hover {
   max-height: 90vh;
   display: grid;
   gap: 8px;
+  padding: 20px; /* <-- ADDED */
 }
 
 #lightboxImg {
@@ -587,31 +588,45 @@ li.active:hover {
   z-index: 10060;
 }
 
-
 /* ===== Full-screen text card (Ask/Reveal) ===== */
 #textCard {
   position: fixed;
   inset: 0;
-  background: var(--bg);
   z-index: 10040;
-  display: none;
-  padding: 20px 14px;
+  
+  /* New centering layout */
+  display: none; /* <-- CORRECTED: Should be none by default */
+  align-items: center;
+  justify-content: center;
+  padding: 20px; /* Padding for small screens */
+
+  /* Your blur suggestion */
+  background: var(--bg); /* Fallback dim */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 #textCard.show {
-  display: grid;
+  display: flex; /* Changed from grid */
 }
 
 #textCard .inner {
-  margin: 0 auto;
+  /* This is now the visible card */
+  border-radius: 14px;
+
+  /* Size constraints */
+  width: 100%;
   max-width: 1200px;
-  display: grid;
-  grid-template-rows: 1fr auto 1fr;
-  align-items: center;
-  justify-items: center;
-  gap: 24px;
-  height: 100%;
+  max-height: 90vh; /* Allow scrolling */
+/*   overflow-y: auto; */
+
+  /* NEW layout for the content inside */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally */
+  gap: 3rem;
   text-align: center;
+  padding: 20px 14px;
 }
 
 #textCard .badge {
@@ -623,15 +638,12 @@ li.active:hover {
   line-height: 1.15;
   color: var(--text);
   word-break: break-word;
-  align-self: end;
 }
 
 #textCard .toolbar {
   display: flex;
   justify-content: center;
   gap: 10px;
-  align-self: start;
-  grid-row: 3;
 }
 
 #textCard .toolbar button {
@@ -657,7 +669,6 @@ li.active:hover {
 }
 
 #textCardFigure {
-  grid-row: 2;
   width: 100%;
 }
 
@@ -839,13 +850,14 @@ font-size: clamp(1.5rem, 3vw, 2rem);
   background: rgba(0, 0, 0, .72);
   display: none;
   z-index: 10080;
+  padding: 20px; /* <-- ADDED */
 }
 
 .picker.show {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  /* padding: 20px; */ /* <-- REMOVED */
 }
 
 .picker-panel {
@@ -1041,7 +1053,7 @@ li.activated-tonight {
 
 /* Add this to your styles.css file */
 body.modal-open {
-  overflow: hidden;
+  overflow: hidden; /* <-- REVERTED: JS now handles position */
 }
 
 .role-token-inline {
@@ -1052,4 +1064,3 @@ body.modal-open {
     vertical-align: middle;
     background-color: #111;
     border: 1px solid var(--border);
-}
