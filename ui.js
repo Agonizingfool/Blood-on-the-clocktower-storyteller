@@ -90,12 +90,17 @@ export function updateLegendCounts(playerCount) {
     });
 }
 
-export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set(), poisonedRoleForNight = null, playerPool, ravenkeeperIsActivated, ravenkeeperAbilityUsed, undertakerCanAct = false) {
+export function renderList(listElement, listId, steps, rolesInPlay, playerNames, stepClickHandler, drunkRoles = new Set(), poisonedRoleForNight = null, playerPool, ravenkeeperIsActivated, ravenkeeperAbilityUsed, undertakerCanAct = false, impIsDeadByExecution = false) {
     listElement.innerHTML = "";
     const roleToPlayer = new Map();
     playerPool.forEach((player, name) => { if (player.assignedRole) { roleToPlayer.set(player.assignedRole, player); } });
     steps.forEach((step, idx) => {
         if (step.role === 'Undertaker' && !undertakerCanAct) {
+            return;
+        }
+
+        // NEW: Only show the Scarlet Woman step if the Imp has been executed
+        if (step.role === 'Scarlet Woman' && !impIsDeadByExecution) {
             return;
         }
 
