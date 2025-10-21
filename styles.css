@@ -612,7 +612,10 @@ li.active:hover {
 
 #textCard .inner {
   /* This is now the visible card */
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 14px;
+  box-shadow: var(--shadow);
 
   /* Size constraints */
   width: 100%;
