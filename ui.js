@@ -254,22 +254,18 @@ export function buildPicker(options, playerNames = new Map(), playerPool = new M
 
 export function openTextCard(show) {
     const card = qs("#textCard");
-    // card.classList.toggle("show", show); // <-- REMOVED
-    card.style.display = show ? 'flex' : 'none'; // <-- ADDED: Brute-force the style
+    card.classList.toggle('is-open', show); // <-- CHANGED
     card.setAttribute("aria-hidden", String(!show));
     
-    if (show) document.body.classList.add('modal-open');
-    else document.body.classList.remove('modal-open');
+    document.body.classList.toggle('modal-open', show); // <-- CHANGED
 }
 
 export function openPicker(show) {
     const picker = qs("#picker");
-    // picker.classList.toggle("show", show); // <-- REMOVED
-    picker.style.display = show ? 'flex' : 'none'; // <-- ADDED: Brute-force the style
+    picker.classList.toggle('is-open', show); // <-- CHANGED
     picker.setAttribute("aria-hidden", String(!show));
 
-    if (show) document.body.classList.add('modal-open');
-    else document.body.classList.remove('modal-open');
+    document.body.classList.toggle('modal-open', show); // <-- CHANGED
 
     if (!show) {
         qs("#pickerList").innerHTML = "";

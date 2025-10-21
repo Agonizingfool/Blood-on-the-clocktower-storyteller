@@ -594,12 +594,29 @@ li.active:hover {
   inset: 0;
   z-index: 10040;
   
-  display: none; 
+  /* Centering layout */
+  display: flex; /* <-- NOW ALWAYS FLEX */
   align-items: center;
   justify-content: center;
-  padding: 20px; /* Padding for small screens */
+  padding: 20px; 
 
-  background: var(--bg); /* Fallback dim */
+  /* Dimming background */
+  background: rgba(15, 12, 22, 0.5); /* Fallback dim */
+  /* backdrop-filter: blur(8px); */ /* <-- REMOVED (PRIME BUG SUSPECT) */
+  /* -webkit-backdrop-filter: blur(8px); */ /* <-- REMOVED */
+
+  /* NEW visibility rules */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* NEW open state */
+#textCard.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 
@@ -844,13 +861,25 @@ font-size: clamp(4rem, 3vw, 2rem);
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, .72);
-  display: none;
+  display: flex; /* <-- NOW ALWAYS FLEX */
   z-index: 10080;
   padding: 20px;
   
-  /* MOVED from .picker.show */
   align-items: center;
   justify-content: center;
+
+  /* NEW visibility rules */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* NEW open state */
+.picker.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .picker.show {
